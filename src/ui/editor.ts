@@ -10,26 +10,40 @@ import type { EdgeOverride } from '../state';
 import { c2, draw2d, pickAt, evPos, snap, toWorld } from '../render/view2d';
 import { build3d } from '../render/view3d';
 import { syncBox } from './edgeBox';
+import { t, onLangChange } from '../i18n';
+import type { Key } from '../i18n';
 
 export function weightsArr(): number[] {
   return state.pts.map((_, i) => { const o = state.ov[i]; const a = o ? (o.gable ? null : o.alpha) : globalAlpha(); return a === null ? 0 : 1 / Math.tan(a! * Math.PI / 180); });
 }
 
+// polygonProblem() returns English text (kept for its tests); map it to a dictionary key for display
+const PROBLEM_KEYS: Record<string, Key> = {
+  'Polygon needs at least 3 points': 'err.tooFew', 'Duplicate points (zero-length edge)': 'err.duplicate',
+  'Self-intersecting polygon': 'err.selfIntersect', 'Degenerate polygon (zero area)': 'err.zeroArea',
+};
+let msgFn: (() => string) | null = null;   // current message, re-rendered on language change
+function showMsg(fn: (() => string) | null): void {
+  msgFn = fn;
+  const msg = $('msg'); msg.textContent = fn ? '\u26a0 ' + fn() : ''; msg.hidden = !fn;
+}
+onLangChange(() => showMsg(msgFn));
 function setProblem(problem: string | null): void {
   state.invalid = problem;
-  const msg = $('msg'); msg.textContent = problem ? '\u26a0 ' + problem : ''; msg.hidden = !problem;
+  showMsg(problem ? () => (PROBLEM_KEYS[problem] ? t(PROBLEM_KEYS[problem]) : problem) : null);
 }
 
 export function recompute(refit: boolean): void {
-  let problem: string | null = null;
+  let problem: string | null = null, skelErr: string | null = null;
   state.sk = null;
   if (state.closed) {
     problem = polygonProblem(state.pts);
     if (!problem) {
-      try { state.sk = straightSkeleton(state.pts, weightsArr()); } catch (err) { problem = 'Skeleton computation failed: ' + (err as Error).message; }
+      try { state.sk = straightSkeleton(state.pts, weightsArr()); } catch (err) { skelErr = (err as Error).message; problem = 'Skeleton computation failed: ' + skelErr; }
     }
   }
   setProblem(problem);
+  if (skelErr !== null) { const m = skelErr; showMsg(() => t('err.skelFailed', { msg: m })); }
   draw2d(); build3d(refit);
 }
 let rafPending = false;
@@ -51,7 +65,7 @@ export function addPointToEdge(i: number, p?: Vec2): void {
 /** delete vertex v; its two edges merge, keeping the previous edge's settings; at least 3 points stay */
 export function deletePoint(v: number): void {
   const r = deleteVertex(state.pts, state.ov, v);
-  if (!r) { const m = $('msg'); m.textContent = `A polygon needs at least ${MIN_POINTS} points`; m.hidden = false; return; }
+  if (!r) { showMsg(() => t('err.minPoints', { n: MIN_POINTS })); return; }
   state.pts = r.pts; state.ov = r.ov; state.sel = -1; state.selVertex = -1; state.hover = null; state.highlight = null;
   syncBox(); recompute(false);
 }

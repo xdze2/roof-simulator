@@ -1,3 +1,4 @@
+import { t, onLangChange } from '../i18n';
 import type { Vec2 } from '../geometry/skeleton';
 import { fieldFor } from '../geometry/nearest';
 import { pickTarget } from '../geometry/hit';
@@ -15,8 +16,12 @@ export function resize2d(): void {
   const r = c2.getBoundingClientRect(), dpr = devicePixelRatio || 1;
   c2.width = Math.round(r.width * dpr); c2.height = Math.round(r.height * dpr);
   VIEW.w = r.width; VIEW.h = r.height;
-  VIEW.s = Math.min(r.width, r.height) / 42;
-  VIEW.ox = r.width / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
+  // the floating tour panel hides the left of the plan: fit the drawing in the uncovered part
+  const tour = document.getElementById('tour');
+  const inset = tour && !tour.hidden && getComputedStyle(tour).position === 'absolute' ? tour.offsetLeft + tour.offsetWidth + 8 : 0;
+  const w = r.width - inset;
+  VIEW.s = Math.min(w, r.height) / 42;
+  VIEW.ox = inset + w / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw2d();
 }
@@ -24,20 +29,21 @@ export const toScr = (p: Vec2): Vec2 => [VIEW.ox + p[0] * VIEW.s, VIEW.oy - p[1]
 export const toWorld = (x: number, y: number): Vec2 => [(x - VIEW.ox) / VIEW.s, (VIEW.oy - y) / VIEW.s];
 
 let legendKey = '';
+onLangChange(() => { legendKey = ''; draw2d(); });
 function updateLegend(iso: boolean, mode: string): void {
   const { sk, closed, ov } = state;
-  const items: [string, number, string, string][] = [['#111', 2, 'solid', 'wall / outline']];
-  if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', 'gable (speed 0)']);
+  const items: [string, number, string, string][] = [['#111', 2, 'solid', t('legend.outline')]];
+  if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', t('legend.gable')]);
   if (sk && closed && showsArcs(mode)) {
-    if (iso) items.push(['#d32f2f', 2, 'solid', 'ridge / hip / valley']);
-    else items.push(['#c4501b', 2, 'solid', 'hip / ridge'], ['#1b6fc4', 2, 'solid', 'valley']);
+    if (iso) items.push(['#d32f2f', 2, 'solid', t('legend.ridgeAll')]);
+    else items.push(['#c4501b', 2, 'solid', t('legend.hipRidge')], ['#1b6fc4', 2, 'solid', t('legend.valley')]);
   }
-  if (sk && closed && iso) items.push(['#bdbdbd', 1, 'solid', 'isolines (every ' + ISO_STEP + ' m)']);
-  if (sk && closed && cutFraction() !== null) items.push(['#d00000', 3, 'solid', 'level line']);
+  if (sk && closed && iso) items.push(['#bdbdbd', 1, 'solid', t('legend.isolines', { step: ISO_STEP })]);
+  if (sk && closed && cutFraction() !== null) items.push(['#d00000', 3, 'solid', t('legend.level')]);
   const key = JSON.stringify(items);
   if (key === legendKey) return;
   legendKey = key;
-  $('legend').innerHTML = items.map(([c, w, st, t]) => `<div class="li"><i style="border-top-width:${w}px;border-color:${c};border-top-style:${st}"></i>${t}</div>`).join('');
+  $('legend').innerHTML = items.map(([c, w, st, label]) => `<div class="li"><i style="border-top-width:${w}px;border-color:${c};border-top-style:${st}"></i>${label}</div>`).join('');
 }
 
 export function draw2d(): void {

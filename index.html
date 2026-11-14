@@ -7,58 +7,69 @@
 </head>
 <body>
 <header>
-  <h1>Roof Simulator</h1>
-  <button id="tourToggle" title="show / hide the guided tour (PageUp / PageDown: previous / next step)">Tour</button>
-  <button id="clear">Clear</button>
-  <span>Presets:</span>
-  <button data-preset="rectangle">Rectangle</button>
-  <button data-preset="L">L</button>
-  <button data-preset="T">T</button>
-  <button data-preset="U">U</button>
-  <button data-preset="irregular">Irregular</button>
-  <button data-preset="gableHouse">Gable house</button>
-  <button data-preset="lGables">L with gables</button>
-  <button id="resetW" title="all edges back to the global slope">Reset all</button>
-  <label>Slope <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
-  <label><input id="walls" type="checkbox" checked> walls</label>
-  <label>Mode <select id="mode">
-    <option value="skel">Straight skeleton</option>
-    <option value="nearest">Nearest segment (Voronoi / medial axis)</option>
-    <option value="overlay">Overlay (nearest + skeleton arcs)</option>
-    <option value="points">Nearest vertex (Voronoi of points)</option>
-  </select></label>
-  <label><input id="iso" type="checkbox"> isolines</label>
-  <label id="cutBox" title="level line and horizontal cut plane, as a fraction of the ridge height"><input id="cutOn" type="checkbox"> level <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
-  <span id="note" style="color:#7a5200"></span>
-  <button id="about">About</button>
-  <span id="msg" role="alert" hidden></span>
+  <div id="brand"><h1 data-i18n="site.title">Roof Simulator</h1>
+    <p id="desc" data-i18n="site.desc"></p></div>
+  <div id="tools">
+    <fieldset class="grp"><legend data-i18n="group.drawing">Drawing</legend>
+      <button id="clear" data-i18n="btn.clear" data-i18n-title="btn.clear.title">Clear</button>
+      <select id="preset" data-i18n-aria="preset.label">
+        <option value="" data-i18n="preset.placeholder"></option>
+        <option value="rectangle" data-i18n="preset.rectangle">Rectangle</option>
+        <option value="L" data-i18n="preset.L">L</option>
+        <option value="T" data-i18n="preset.T">T</option>
+        <option value="U" data-i18n="preset.U">U</option>
+        <option value="irregular" data-i18n="preset.irregular">Irregular</option>
+        <option value="gableHouse" data-i18n="preset.gableHouse">Gable house</option>
+        <option value="lGables" data-i18n="preset.lGables">L with gables</option>
+      </select>
+      <button id="resetW" data-i18n="btn.resetAll" data-i18n-title="btn.resetAll.title">Reset all</button>
+    </fieldset>
+    <fieldset class="grp"><legend data-i18n="group.roof">Roof</legend>
+      <label><span data-i18n="mode.label">Method</span> <select id="mode">
+        <option value="skel" data-i18n="mode.skel"></option>
+        <option value="nearest" data-i18n="mode.nearest"></option>
+        <option value="overlay" data-i18n="mode.overlay"></option>
+        <option value="points" data-i18n="mode.points"></option>
+      </select></label>
+      <label><span data-i18n="slope.label">Slope</span> <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
+    </fieldset>
+    <fieldset class="grp"><legend data-i18n="group.view">View</legend>
+      <label><input id="iso" type="checkbox"> <span data-i18n="iso.label">isolines</span></label>
+      <label id="cutBox" data-i18n-title="cut.title"><input id="cutOn" type="checkbox"> <span data-i18n="cut.label">level</span> <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
+    </fieldset>
+    <span id="note"></span>
+    <span id="msg" role="alert" hidden></span>
+  </div>
+  <div id="right">
+    <button id="tourToggle" data-i18n="btn.tour" data-i18n-title="btn.tour.title">Tour</button>
+    <div id="langSel" role="group" data-i18n-aria="lang.label"><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
+    <button id="about" data-i18n="btn.about">About</button>
+  </div>
 </header>
 <div id="main">
-<aside id="tour" aria-label="Visite guidée"></aside>
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>
     <div id="edgeBox" hidden>
-      <div class="ehead">Edge <b id="eN"></b></div>
-      <div class="erow"><label class="rad"><input type="radio" name="em" value="hip"> Hip</label>
-        <span class="sl">slope=<b id="eSlopeV"></b></span>
+      <div class="ehead"><span data-i18n="edge.title">Edge</span> <b id="eN"></b></div>
+      <div class="erow"><label class="rad"><input type="radio" name="em" value="hip"> <span data-i18n="edge.hip">Hip</span></label>
+        <span class="sl"><span data-i18n="edge.slope">slope=</span><b id="eSlopeV"></b></span>
         <input id="eSlope" type="range" min="15" max="75" value="40">
-        <label class="glob" title="on: this edge follows the global slope (toolbar); off: it has its own slope"><input id="eGlobal" type="checkbox"> global</label></div>
-      <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> Gable (speed=0)</label></div>
-      <div class="erow"><button id="eAdd" title="insert a point at the middle of this edge (or double-click the edge)">Add point</button></div>
-      <div class="small">click an edge to select it; shift-click or key G toggles gable</div></div>
-    <div id="vertBox" hidden>Point <b id="vN"></b> <button id="vDel" title="or press Delete / right-click the point">Delete point</button></div>
+        <label class="glob" data-i18n-title="edge.global.title"><input id="eGlobal" type="checkbox"> <span data-i18n="edge.global">global</span></label></div>
+      <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> <span data-i18n="edge.gable">Gable (speed=0)</span></label></div>
+      <div class="erow"><button id="eAdd" data-i18n="edge.add" data-i18n-title="edge.add.title">Add point</button></div>
+      <div class="small" data-i18n="edge.help"></div></div>
+    <div id="vertBox" hidden><span data-i18n="vert.title">Point</span> <b id="vN"></b> <button id="vDel" data-i18n="vert.delete" data-i18n-title="vert.delete.title">Delete point</button></div>
     <div id="bl"><div id="legend"></div>
-    <div class="hint">click to add points; click the first point, double-click or Enter to close; drag points or edges to edit; double-click an edge to add a point; select a point + Delete (or right-click it) to remove it.</div></div></div>
+    <div class="hint" data-i18n="hint"></div></div></div>
   <div class="pane"><canvas id="c3d"></canvas></div>
 </div>
+<aside id="tour" data-i18n-aria="tour.aria"></aside>
 </div>
-<div id="modal" hidden><div class="box" role="dialog" aria-label="About">
-  <button class="x" id="modalX" aria-label="Close">&times;</button>
-  <h2>About this demo</h2>
-  <p>The <b>straight skeleton</b> of a polygon is traced by its corners while every edge moves inward, parallel to itself, at constant speed. Corners stay sharp (a <i>mitered</i> offset), so at a reflex corner the offset keeps a pointed shape. A <i>rounded</i> offset, as in a Minkowski or buffer offset, would instead swing an arc of circle around it.</p>
-  <p>Height = arrival time of the wavefront, times tan(slope). The result is a hip roof with all planes at the same slope; each face is one roof plane, belonging to one footprint edge. Skeleton arcs are hips and ridges (convex) or valleys (reflex).</p>
-  <p>The <b>nearest-segment</b> mode shows something different: each point is coloured by its closest boundary element (an open edge, or a reflex vertex in grey), and the height is the true distance to the boundary. Its boundaries are the medial axis (Voronoi diagram of the segments): parabolic arcs next to reflex corners and circular, round cones around reflex vertices, which is the rounded counterpart of the mitered skeleton. It is sampled on a grid here, not computed exactly.</p>
-  <h3>References</h3>
+<div id="modal" hidden><div class="box" role="dialog" data-i18n-aria="about.aria">
+  <button class="x" id="modalX" data-i18n-aria="about.close">&times;</button>
+  <h2 data-i18n="about.title">About this demo</h2>
+  <div data-i18n-html="about.body"></div>
+  <h3 data-i18n="about.refs">References</h3>
   <ul>
     <li>O. Aichholzer, F. Aurenhammer, "Straight Skeletons for General Polygonal Figures in the Plane", COCOON 1996, LNCS 1090, pp. 117&ndash;126.</li>
     <li>O. Aichholzer, D. Alberts, F. Aurenhammer, B. G&auml;rtner, "A Novel Type of Skeleton for Polygons", Journal of Universal Computer Science 1(12), 1995.</li>

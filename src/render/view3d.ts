@@ -155,7 +155,7 @@ export function build3d(refit: boolean): void {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
     group.add(solid(g, new THREE.MeshLambertMaterial({ color: gable ? 0xe9e2d0 : colorHex(i), side: THREE.DoubleSide })));
   });
-  if ($<HTMLInputElement>('walls').checked) {
+  {
     const P = sk.poly, pos: number[] = [];
     for (let i = 0; i < P.length; i++) {
       const a = P[i], b = P[(i + 1) % P.length];

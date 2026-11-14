@@ -5,8 +5,22 @@
 :root { --bg:#f4f4f1; --fg:#222; --panel:#fff; --line:#cfcfc8; }
 * { box-sizing: border-box; }
 body { margin:0; font:14px system-ui, sans-serif; background:var(--bg); color:var(--fg); height:100vh; display:flex; flex-direction:column; }
-header { padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; border-bottom:1px solid var(--line); background:var(--panel); }
-header h1 { font-size:15px; margin:0 8px 0 0; }
+header { padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:flex-start; border-bottom:1px solid var(--line); background:var(--panel); }
+#brand { flex:1 1 230px; max-width:560px; min-width:170px; }
+header h1 { font-size:15px; margin:0 0 2px; }
+#desc { margin:0; font-size:11.5px; line-height:1.35; color:#777; }
+#tools { flex:1 1 auto; display:flex; flex-wrap:wrap; gap:8px 10px; align-items:stretch; min-width:0; }
+.grp { margin:0; padding:2px 10px 6px; border:1px solid var(--line); border-radius:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; min-width:0; }
+.grp legend { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#777; padding:0 4px; }
+#tools > #note, #tools > #msg { align-self:center; }
+#note { color:#7a5200; }
+#right { display:flex; align-items:center; gap:8px; margin-left:auto; }
+#langSel { display:flex; }
+#langSel button { border-radius:0; padding:4px 8px; margin-left:-1px; }
+#langSel button:first-child { border-radius:4px 0 0 4px; margin-left:0; }
+#langSel button:last-child { border-radius:0 4px 4px 0; }
+#langSel button[aria-pressed=true] { background:#ffe9a8; font-weight:600; position:relative; }
+select { font:inherit; padding:3px 6px; border:1px solid #aaa; background:#f8f8f6; border-radius:4px; max-width:100%; }
 button { font:inherit; padding:4px 10px; border:1px solid #aaa; background:#f8f8f6; border-radius:4px; cursor:pointer; }
 button:hover { background:#eee; }
 label { display:flex; align-items:center; gap:6px; }
@@ -36,21 +50,33 @@ canvas { display:block; width:100%; height:100%; }
 #modal .x { position:absolute; right:10px; top:6px; font-size:22px; border:0; background:none; cursor:pointer; }
 #main { flex:1; display:flex; min-height:0; }
 #panes { min-width:0; }
-#tour { width:330px; flex:none; overflow:auto; background:var(--panel); border-right:1px solid var(--line); padding:10px 14px; line-height:1.45; }
+#main { position:relative; }
+#tour { position:absolute; left:8px; top:8px; z-index:5; width:340px; max-width:calc(100% - 16px); max-height:calc(100% - 16px); display:flex; flex-direction:column;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.15); padding:8px 12px 10px; line-height:1.45; }
 #tour[hidden] { display:none; }
-#tour .tour-head { display:flex; justify-content:space-between; align-items:baseline; font-size:15px; }
+#tour .tour-head { display:flex; align-items:baseline; gap:8px; font-size:15px; flex:none; }
 #tour .tour-count { color:#666; font-size:12px; }
-#tour .tour-list { margin:8px 0; padding:0; list-style:none; counter-reset:st; font-size:12.5px; }
-#tour .tour-list li { counter-increment:st; }
-#tour .tour-list button { display:block; width:100%; text-align:left; border:0; background:none; padding:2px 4px; border-radius:3px; }
-#tour .tour-list button::before { content:counter(st) ". "; color:#888; }
-#tour .tour-list li.on button { background:#ffe9a8; font-weight:600; }
-#tour .tour-body h2 { font-size:16px; margin:10px 0 6px; border-top:1px solid var(--line); padding-top:10px; }
-#tour .tour-body p { margin:6px 0; }
-#tour .tour-nav { display:flex; gap:8px; justify-content:space-between; margin:10px 0 4px; }
+#tour .tour-x { margin-left:auto; border:0; background:none; font-size:22px; line-height:1; padding:0 4px; color:#555; }
+#tour .tour-x:hover { color:#000; background:none; }
+#tour .tour-list { margin:6px 0; padding:0 2px 0 0; list-style:none; counter-reset:st; overflow:auto; flex:1 1 auto; min-height:0; }
+#tour .tour-list li { counter-increment:st; border-top:1px solid var(--line); }
+#tour .tour-list li:first-child { border-top:0; }
+#tour .tour-title { display:block; width:100%; text-align:left; border:0; background:none; padding:6px 4px; border-radius:3px; font-size:13px; }
+#tour .tour-title::before { content:counter(st) ". "; color:#888; }
+#tour .tour-title:hover { background:#f2f2ee; }
+#tour li.on .tour-title { background:#ffe9a8; font-weight:600; }
+#tour .tour-step { display:none; padding:4px 6px 8px; font-size:13px; }
+#tour li.on .tour-step { display:block; animation:tourOpen .25s ease-out; }
+@keyframes tourOpen { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+#tour .tour-step p { margin:6px 0; }
+#tour .tour-ctl { margin:8px 0 2px; padding:6px 8px; background:#f4f4f1; border-radius:6px; }
+#tour .tour-ctl input[type=range] { flex:1; min-width:0; }
+#tour .tour-cutv { min-width:4.5ch; font-variant-numeric:tabular-nums; text-align:right; }
+#tour .tour-nav { display:flex; gap:8px; justify-content:space-between; flex:none; }
 #tour .tour-nav button:disabled { opacity:.4; cursor:default; }
 #tourToggle[aria-pressed=true] { background:#ffe9a8; }
 #cutBox input[type=range] { width:100px; }
+#mode { max-width:210px; }
 #cutV { display:inline-block; min-width:4.5ch; font-variant-numeric:tabular-nums; }
 @media (max-width:800px) {
   body { height:auto; min-height:100vh; }
@@ -58,5 +84,9 @@ canvas { display:block; width:100%; height:100%; }
   #panes { flex-direction:column; flex:none; }
   .pane { height:min(70vh, 120vw); flex:none; }
   .pane + .pane { border-left:0; border-top:1px solid var(--line); }
-  #tour { order:2; width:auto; border-right:0; border-top:1px solid var(--line); }
+  #tour { position:static; order:2; width:auto; max-width:none; max-height:none; border-radius:0; box-shadow:none; border-width:1px 0 0; padding:10px 16px; }
+  #tour .tour-list { overflow:visible; }
+}
+@media (min-width:801px) {
+  #main:has(#tour:not([hidden])) #bl { left:356px; max-width:calc(100% - 364px); }   /* keep legend and hint clear of the floating panel */
 }

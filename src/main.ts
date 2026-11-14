@@ -8,9 +8,11 @@ import { initToolbar, setMode } from './ui/toolbar';
 import { initModal } from './ui/modal';
 import { initTour } from './ui/tour';
 import { $ } from './dom';
+import { initI18n } from './i18n';
 
 declare global { interface Window { __ready?: boolean; __tour?: ReturnType<typeof initTour> } }
 
+initI18n();
 initEditor();
 initEdgeBox(() => recompute(false), toggleGable, addPointToEdge, deletePoint);
 initToolbar();

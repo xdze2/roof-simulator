@@ -12,6 +12,9 @@ describe('tour steps', () => {
   it('ids are unique', () => {
     expect(new Set(STEPS.map((s) => s.id)).size).toBe(STEPS.length);
   });
+  for (const s of STEPS) it(`${s.id}: title and text exist in both languages`, () => {
+    for (const l of ['en', 'fr'] as const) { expect(s.title[l].trim()).not.toBe(''); expect(s.html[l].trim()).not.toBe(''); }
+  });
   for (const s of STEPS) it(`${s.id}: footprint and references are valid`, () => {
     if (s.preset) expect(PRESETS[s.preset]).toBeDefined();
     const shape = stepShape(s);
@@ -25,8 +28,8 @@ describe('tour steps', () => {
     expect(() => straightSkeleton(pts, weights(n, ov))).not.toThrow();
   });
   it('gables come from the preset unless given; slopes become per-edge overrides', () => {
-    expect(stepShape({ id: 'a', title: '', html: '', preset: 'gableHouse' })!.ov[1]).toEqual({ gable: true });
-    expect(stepShape({ id: 'b', title: '', html: '', preset: 'gableHouse', gables: [] })!.ov.filter(Boolean)).toEqual([]);
-    expect(stepShape({ id: 'c', title: '', html: '', preset: 'rectangle', slopes: { 2: 58 } })!.ov[2]).toEqual({ alpha: 58 });
+    expect(stepShape({ id: 'a', title: { en: '', fr: '' }, html: { en: '', fr: '' }, preset: 'gableHouse' })!.ov[1]).toEqual({ gable: true });
+    expect(stepShape({ id: 'b', title: { en: '', fr: '' }, html: { en: '', fr: '' }, preset: 'gableHouse', gables: [] })!.ov.filter(Boolean)).toEqual([]);
+    expect(stepShape({ id: 'c', title: { en: '', fr: '' }, html: { en: '', fr: '' }, preset: 'rectangle', slopes: { 2: 58 } })!.ov[2]).toEqual({ alpha: 58 });
   });
 });

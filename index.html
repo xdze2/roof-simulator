@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Straight skeleton roof demo</title>
+<title>Roof Simulator</title>
 </head>
 <body>
 <header>
-  <h1>Straight skeleton roof</h1>
+  <h1>Roof Simulator</h1>
   <button id="clear">Clear</button>
   <span>Presets:</span>
   <button data-preset="rectangle">Rectangle</button>
@@ -32,14 +32,16 @@
 </header>
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>
-    <div id="edgeBox" hidden>Edge <b id="eN"></b>:
-      <label><input type="radio" name="em" value="hip"> Hip (slope)</label>
-      <label><input type="radio" name="em" value="gable"> Gable</label><br>
-      <input id="eSlope" type="range" min="15" max="75" value="40"> <b id="eSlopeV"></b>
-      <button id="eUse">use global</button>
+    <div id="edgeBox" hidden>
+      <div class="ehead">Edge <b id="eN"></b></div>
+      <div class="erow"><label class="rad"><input type="radio" name="em" value="hip"> Hip</label>
+        <span class="sl">slope=<b id="eSlopeV"></b></span>
+        <input id="eSlope" type="range" min="15" max="75" value="40">
+        <label class="glob" title="on: this edge follows the global slope (toolbar); off: it has its own slope"><input id="eGlobal" type="checkbox"> global</label></div>
+      <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> Gable (speed=0)</label></div>
       <div class="small">click an edge to select it; shift-click or key G toggles gable</div></div>
-    <div class="hint">click to add points; click the first point, double-click or Enter to close; drag vertices to edit.
-      <span style="color:#c4501b">&#9632;</span> hip/ridge <span style="color:#1b6fc4">&#9632;</span> valley</div></div>
+    <div id="legend"></div>
+    <div class="hint">click to add points; click the first point, double-click or Enter to close; drag points or edges to edit.</div></div>
   <div class="pane"><canvas id="c3d"></canvas></div>
 </div>
 <div id="modal" hidden><div class="box" role="dialog" aria-label="About">

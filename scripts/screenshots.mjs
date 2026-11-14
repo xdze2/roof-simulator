@@ -39,6 +39,26 @@ try {
   await open('?preset=gableHouse');
   await shot('gable-house');
 
+  // Edge editing box: click the middle of an edge of the L preset.
+  await open('?preset=L');
+  {
+    const b = await page.locator('#c2d').boundingBox();
+    // L bottom edge runs (8,6)-(34,6) in plan metres; scale = min(w,h)/42, origin (w/2-20s, h/2+19s)
+    const sc = Math.min(b.width, b.height) / 42;
+    await page.mouse.click(b.x + b.width / 2 - 20 * sc + 21 * sc, b.y + b.height / 2 + 19 * sc - 6 * sc);
+  }
+  await shot('edge-box');
+  // Same box in the Gable state (shift-click toggles it): controls must be disabled and the box width unchanged.
+  const boxW = async () => (await page.locator('#edgeBox').boundingBox()).width;
+  const wHip = await boxW();
+  await page.keyboard.press('g');
+  await page.waitForTimeout(200);
+  const wGable = await boxW();
+  const dis = await page.evaluate(() => [document.getElementById('eSlope').disabled, document.getElementById('eGlobal').disabled].map(Boolean));
+  console.log('edge box width hip/gable:', wHip, wGable, 'slider+global disabled:', dis);
+  await shot('edge-box-gable');
+  await page.keyboard.press('g');
+
   await open('?preset=irregular&mode=nearest');
   await shot('nearest-segment');
 

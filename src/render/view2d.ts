@@ -23,6 +23,22 @@ export function resize2d(): void {
 export const toScr = (p: Vec2): Vec2 => [VIEW.ox + p[0] * VIEW.s, VIEW.oy - p[1] * VIEW.s];
 export const toWorld = (x: number, y: number): Vec2 => [(x - VIEW.ox) / VIEW.s, (VIEW.oy - y) / VIEW.s];
 
+let legendKey = '';
+function updateLegend(iso: boolean, mode: string): void {
+  const { sk, closed, ov } = state;
+  const items: [string, number, string, string][] = [['#111', 2, 'solid', 'wall / outline']];
+  if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', 'gable (speed 0)']);
+  if (sk && closed && mode !== 'nearest') {
+    if (iso) items.push(['#d32f2f', 2, 'solid', 'ridge / hip / valley']);
+    else items.push(['#c4501b', 2, 'solid', 'hip / ridge'], ['#1b6fc4', 2, 'solid', 'valley']);
+  }
+  if (sk && closed && iso) items.push(['#bdbdbd', 1, 'solid', 'isolines (every ' + ISO_STEP + ' m)']);
+  const key = JSON.stringify(items);
+  if (key === legendKey) return;
+  legendKey = key;
+  $('legend').innerHTML = items.map(([c, w, st, t]) => `<div class="li"><i style="border-top-width:${w}px;border-color:${c};border-top-style:${st}"></i>${t}</div>`).join('');
+}
+
 export function draw2d(): void {
   const { pts, closed, sk, mouse } = state;
   ctx.clearRect(0, 0, VIEW.w, VIEW.h);
@@ -35,6 +51,7 @@ export function draw2d(): void {
   ctx.stroke();
   const mode = $<HTMLSelectElement>('mode').value;
   const iso = $<HTMLInputElement>('iso').checked;
+  updateLegend(iso, mode);
   if (sk && closed && iso) drawIsolines(sk);   // contour lines replace the face colours
   if (sk && closed && mode !== 'skel' && !iso) drawNearest2d();
   if (sk && closed) {
@@ -81,14 +98,14 @@ function decorateEdges(): void {
     const a = toScr(pts[i]), b = toScr(pts[(i + 1) % n]), o = ov[i];
     const gable = o && o.gable;
     if (i === sel) { ctx.strokeStyle = 'rgba(230,40,40,.55)'; ctx.lineWidth = 9; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
-    if (gable) { ctx.strokeStyle = '#6b2d00'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.lineCap = 'butt'; }
-    if (gable || (o && o.alpha !== g)) {
+    if (gable) { ctx.strokeStyle = '#000'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.lineCap = 'butt'; }
+    if (!gable && o && o.alpha !== g) {
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const nx = (b[1] - a[1]) / len, ny = -(b[0] - a[0]) / len;   // inward side on screen (CCW world, y flipped)
       const tx = (a[0] + b[0]) / 2 + nx * 13, ty = (a[1] + b[1]) / 2 + ny * 13;
-      const txt = gable ? 'gable' : o!.alpha + '°';
+      const txt = o!.alpha + '°';
       ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(tx - 18, ty - 8, 36, 16);
-      ctx.fillStyle = gable ? '#6b2d00' : '#111'; ctx.fillText(txt, tx, ty);
+      ctx.fillStyle = '#111'; ctx.fillText(txt, tx, ty);
     }
   }
   ctx.setLineDash([]);

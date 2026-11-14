@@ -1,4 +1,4 @@
-# Roof skeleton demo
+# Roof Simulator
 Straight skeleton of a drawn polygon (2D plan + three.js roof). Vite + TypeScript + Vitest + Open Props.
 
 ![Main view: U-shaped plan and its 3D roof](docs/screenshots/main.png)
@@ -9,6 +9,9 @@ Straight skeleton of a drawn polygon (2D plan + three.js roof). Vite + TypeScrip
 
 ![Gable house](docs/screenshots/gable-house.png)
 *Gable edges (per-edge profiles).*
+
+![Edge editing box](docs/screenshots/edge-box.png)
+*Selected edge: hip (slope follows the global slope or has its own) or gable.*
 
 ![Nearest-segment mode](docs/screenshots/nearest-segment.png)
 *Nearest-segment (Voronoi / medial axis) mode.*

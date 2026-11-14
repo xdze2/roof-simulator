@@ -60,7 +60,7 @@ function closePoly(): void {
 function updateCursor(): void {
   const dragging = state.drag >= 0 || state.dragEdge;
   const h = state.hover;
-  c2.style.cursor = dragging ? 'grabbing' : h ? (h.kind === 'vertex' ? 'grab' : 'move') : '';
+  c2.style.cursor = dragging ? 'grabbing' : h ? 'grab' : '';
 }
 
 export function initEditor(): void {

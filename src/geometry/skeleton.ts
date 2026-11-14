@@ -14,7 +14,34 @@
 //   arcs  : [{a,b,l,r,reflex}] skeleton arcs between node ids; l,r = the two edges
 //   faces : faces[i] = polygon [{x,y,t}] of the roof plane of edge i (CCW)
 
-export function polyArea(P) {
+export type Vec2 = [number, number];
+export type Polygon = Vec2[];
+
+export interface SkNode { x: number; y: number; t: number }
+export interface SkArc { a: number; b: number; l: number; r: number; reflex: boolean }
+export interface SkEdge { dx: number; dy: number; nx: number; ny: number; c: number; w: number }
+export interface SkFacePoint { x: number; y: number; t: number; node: number }
+export interface Skeleton {
+  poly: Polygon;
+  nodes: SkNode[];
+  arcs: SkArc[];
+  faces: SkFacePoint[][];
+  maxT: number;
+  edges: SkEdge[];
+  weights: number[];
+}
+
+// wavefront vertex (node of the live wavefront polygon, a doubly linked list)
+interface WfVertex {
+  id: number; px: number; py: number; t0: number; eL: number; eR: number; node: number;
+  prev: WfVertex; next: WfVertex;
+  vx: number | null; vy: number | null; anti: boolean; reflex: boolean;
+}
+type WfEvent =
+  | { t: number; type: 0; V: WfVertex; N: WfVertex }
+  | { t: number; type: 1; V: WfVertex; W: WfVertex; N: WfVertex };
+
+export function polyArea(P: ArrayLike<number>[]): number {
   let a = 0;
   for (let i = 0; i < P.length; i++) {
     const p = P[i], q = P[(i + 1) % P.length];
@@ -23,14 +50,14 @@ export function polyArea(P) {
   return a / 2;
 }
 
-function segInter(a, b, c, d) { // proper or touching intersection of segments ab, cd
-  const o = (p, q, r) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+function segInter(a: Vec2, b: Vec2, c: Vec2, d: Vec2): boolean { // proper or touching intersection of segments ab, cd
+  const o = (p: Vec2, q: Vec2, r: Vec2) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
   const o1 = o(a, b, c), o2 = o(a, b, d), o3 = o(c, d, a), o4 = o(c, d, b);
   return o1 * o2 < 0 && o3 * o4 < 0;
 }
 
 // proper self-crossing test (touching/collinear overlap not detected, fine for a UI guard)
-export function isSimple(P) {
+export function isSimple(P: Polygon): boolean {
   const n = P.length;
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
@@ -43,11 +70,12 @@ export function isSimple(P) {
 
 // weights[i] (optional, default 1) = horizontal speed w_e = cot(alpha_e) of edge i (poly[i] -> poly[i+1]):
 // time t is then the roof height z; w = 0 is a gable (the edge never moves).
-export function straightSkeleton(input, weights) {
-  const P0 = input.map((p) => (Array.isArray(p) ? [p[0], p[1]] : [p.x, p.y]));
+export function straightSkeleton(input: Array<Vec2 | { x: number; y: number }>, weights?: Array<number | null | undefined>): Skeleton {
+  const P0: Polygon = input.map((p): Vec2 => (Array.isArray(p) ? [p[0], p[1]] : [p.x, p.y]));
   const W0 = P0.map((_, i) => (weights && weights[i] != null ? weights[i] : 1));
   // drop consecutive duplicates (the edge leaving a kept point is the one leaving the last duplicate)
-  let P = [], W = [];
+  const P: Polygon = [];
+  let W: number[] = [];
   const m0 = P0.length;
   const dup = P0.map((p, i) => { const q = P0[(i + m0 - 1) % m0]; return Math.hypot(p[0] - q[0], p[1] - q[1]) <= 1e-12; });
   for (let i = 0; i < m0; i++) {
@@ -66,7 +94,7 @@ export function straightSkeleton(input, weights) {
   const scale = Math.max(maxx - minx, maxy - miny, 1e-9);
   const tol = scale * 1e-7;
 
-  const E = [];
+  const E: SkEdge[] = [];
   for (let i = 0; i < n; i++) {
     const a = P[i], b = P[(i + 1) % n];
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -75,17 +103,17 @@ export function straightSkeleton(input, weights) {
     E.push({ dx, dy, nx, ny, c: nx * a[0] + ny * a[1], w: W[i] });
   }
 
-  const nodes = [];
-  const arcs = [];
-  const arcKeys = new Set();
-  function nodeAt(x, y, t) {
+  const nodes: SkNode[] = [];
+  const arcs: SkArc[] = [];
+  const arcKeys = new Set<string>();
+  function nodeAt(x: number, y: number, t: number): number {
     for (let i = 0; i < nodes.length; i++) {
       if (Math.hypot(nodes[i].x - x, nodes[i].y - y) < tol * 3 && Math.abs(nodes[i].t - t) < tol * 3) return i; // same plan point at another height = a point on a gable wall
     }
     nodes.push({ x, y, t });
     return nodes.length - 1;
   }
-  function addArc(a, b, l, r, reflex) {
+  function addArc(a: number, b: number, l: number, r: number, reflex: boolean): void {
     if (a === b) return;
     const key = a < b ? a + '_' + b : b + '_' + a;
     if (arcKeys.has(key)) return;
@@ -94,11 +122,12 @@ export function straightSkeleton(input, weights) {
   }
 
   let vid = 0;
-  const active = new Set();
-  function makeVertex(px, py, t0, eL, eR, node) {
+  const active = new Set<WfVertex>();
+  function makeVertex(px: number, py: number, t0: number, eL: number, eR: number, node: number): WfVertex {
     const L = E[eL], R = E[eR];
     const det = L.nx * R.ny - L.ny * R.nx;
-    const v = { id: vid++, px, py, t0, eL, eR, node, prev: null, next: null, vx: null, vy: null, anti: false, reflex: false };
+    // prev/next are linked by the caller right after creation
+    const v = { id: vid++, px, py, t0, eL, eR, node, prev: null, next: null, vx: null, vy: null, anti: false, reflex: false } as unknown as WfVertex;
     if (Math.abs(det) < 1e-9) {
       if (L.nx * R.nx + L.ny * R.ny > 0) { const w = (L.w + R.w) / 2; v.vx = w * L.nx; v.vy = w * L.ny; } else v.anti = true;
     } else { // n_L.v = w_L, n_R.v = w_R
@@ -108,11 +137,11 @@ export function straightSkeleton(input, weights) {
     v.reflex = L.dx * R.dy - L.dy * R.dx < -1e-12;
     return v;
   }
-  const posX = (v, t) => (v.vx === null ? v.px : v.px + v.vx * (t - v.t0));
-  const posY = (v, t) => (v.vy === null ? v.py : v.py + v.vy * (t - v.t0));
+  const posX = (v: WfVertex, t: number): number => (v.vx === null ? v.px : v.px + v.vx * (t - v.t0));
+  const posY = (v: WfVertex, t: number): number => (v.vy === null ? v.py : v.py + v.vy * (t - v.t0));
 
   // initial LAV
-  const init = [];
+  const init: WfVertex[] = [];
   for (let i = 0; i < n; i++) {
     const node = nodeAt(P[i][0], P[i][1], 0);
     init.push(makeVertex(P[i][0], P[i][1], 0, (i + n - 1) % n, i, node));
@@ -127,20 +156,20 @@ export function straightSkeleton(input, weights) {
 
   let now = 0;
 
-  function cycleSize(v) {
+  function cycleSize(v: WfVertex): number {
     let k = 1, w = v.next;
     while (w !== v && k < 100000) { k++; w = w.next; }
     return k;
   }
 
-  function killVertexArc(v, node) {
+  function killVertexArc(v: WfVertex, node: number): void {
     addArc(v.node, node, v.eL, v.eR, v.reflex);
   }
 
-  function finish(v) { // cycle of size <= 2: wavefront has collapsed
-    const cyc = [v];
+  function finish(v: WfVertex): void { // cycle of size <= 2: wavefront has collapsed
+    const cyc: WfVertex[] = [v];
     if (v.next !== v) cyc.push(v.next);
-    const ids = [];
+    const ids: number[] = [];
     for (const w of cyc) {
       const nd = nodeAt(posX(w, now), posY(w, now), now);
       killVertexArc(w, nd);
@@ -151,12 +180,12 @@ export function straightSkeleton(input, weights) {
   }
 
   // new vertex X with anti-parallel edges: the strip between eL and eR has collapsed to a segment
-  function ridge(X, queue) {
+  function ridge(X: WfVertex, queue: WfVertex[]): void {
     const P0 = X.prev, N0 = X.next;
     const d = E[X.eL];
     const px = posX(X, now), py = posY(X, now);
     const xNode = nodeAt(px, py, now);
-    const s = (w) => posX(w, now) * d.dx + posY(w, now) * d.dy;
+    const s = (w: WfVertex) => posX(w, now) * d.dx + posY(w, now) * d.dy;
     const sp = s(P0), sn = s(N0);
     const diff = sn - sp;
     active.delete(X);
@@ -190,10 +219,10 @@ export function straightSkeleton(input, weights) {
     }
   }
 
-  function settle(list) {
+  function settle(list: WfVertex[]): void {
     const q = list.slice();
     while (q.length) {
-      const v = q.pop();
+      const v = q.pop()!;
       if (!active.has(v)) continue;
       if (cycleSize(v) <= 2) { finish(v); continue; }
       if (v.anti) ridge(v, q);
@@ -203,17 +232,17 @@ export function straightSkeleton(input, weights) {
   const maxIter = 40 * n + 200;
   for (let iter = 0; active.size > 0; iter++) {
     if (iter > maxIter) throw new Error('straight skeleton: too many events (degenerate input?)');
-    let best = null;
-    const consider = (c) => {
+    let best: WfEvent | null = null;
+    const consider = (c: WfEvent) => {
       if (!best || c.t < best.t - tol || (c.t <= best.t + tol && c.type < best.type) ||
           (c.type === best.type && c.t < best.t)) best = c;
     };
     for (const V of active) {
-      if (V.vx === null) continue;
+      if (V.vx === null || V.vy === null) continue;
       const bx = V.px - V.vx * V.t0, by = V.py - V.vy * V.t0;
       // edge event V--next
       const N = V.next;
-      if (N !== V && N.vx !== null) {
+      if (N !== V && N.vx !== null && N.vy !== null) {
         const dvx = V.vx - N.vx, dvy = V.vy - N.vy, dd = dvx * dvx + dvy * dvy;
         const e = E[V.eR];
         if (dd > 1e-14 && dvx * e.dx + dvy * e.dy > 1e-9) { // edge is shrinking
@@ -229,7 +258,7 @@ export function straightSkeleton(input, weights) {
       if (V.reflex) {
         for (const W of active) {
           const N2 = W.next;
-          if (W === V || N2 === V || W.vx === null || N2.vx === null) continue;
+          if (W === V || N2 === V || W.vx === null || N2.vx === null || V.vy === null) continue;
           const e = E[W.eR];
           const den = e.nx * V.vx + e.ny * V.vy - e.w;
           if (Math.abs(den) < 1e-12) continue;
@@ -245,16 +274,17 @@ export function straightSkeleton(input, weights) {
         }
       }
     }
-    if (!best) {
+    const ev = best as WfEvent | null; // (assigned inside the closure above)
+    if (!ev) {
       // nothing left to happen but vertices remain: close whatever is left
       const rest = [...active];
       for (const v of rest) if (active.has(v)) { if (cycleSize(v) <= 2) finish(v); else { for (const w of [...active]) active.delete(w); } }
       break;
     }
-    now = Math.max(now, best.t);
+    now = Math.max(now, ev.t);
     const t = now;
-    if (best.type === 0) {
-      const { V, N } = best;
+    if (ev.type === 0) {
+      const { V, N } = ev;
       const x = (posX(V, t) + posX(N, t)) / 2, y = (posY(V, t) + posY(N, t)) / 2;
       const nd = nodeAt(x, y, t);
       killVertexArc(V, nd); killVertexArc(N, nd);
@@ -265,7 +295,7 @@ export function straightSkeleton(input, weights) {
       active.add(M);
       settle([M]);
     } else {
-      const { V, W, N } = best;
+      const { V, W, N } = ev;
       const x = posX(V, t), y = posY(V, t);
       const nd = nodeAt(x, y, t);
       killVertexArc(V, nd);
@@ -282,17 +312,17 @@ export function straightSkeleton(input, weights) {
   }
 
   // ---- faces: trace the cycle of arcs labelled by each edge ----
-  const faces = [];
+  const faces: SkFacePoint[][] = [];
   for (let e = 0; e < n; e++) {
     const u = baseNode[e], w = baseNode[(e + 1) % n];
-    const adj = new Map();
-    const link = (a, b) => {
+    const adj = new Map<number, Set<number>>();
+    const link = (a: number, b: number) => {
       if (!adj.has(a)) adj.set(a, new Set());
       if (!adj.has(b)) adj.set(b, new Set());
-      adj.get(a).add(b); adj.get(b).add(a);
+      adj.get(a)!.add(b); adj.get(b)!.add(a);
     };
     for (const a of arcs) if (a.l === e || a.r === e) link(a.a, a.b);
-    const path = [u, w];
+    const path: number[] = [u, w];
     let prev = u, cur = w, guard = 0;
     while (cur !== u && guard++ < nodes.length + 5) {
       const cand = [...(adj.get(cur) || [])].filter((k) => k !== prev && !(cur === w && prev === u && k === u));

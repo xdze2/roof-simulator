@@ -1,5 +1,7 @@
+import type { Polygon } from './skeleton';
+
 // Preset footprints (plan coordinates in metres, y up).
-export const PRESETS = {
+export const PRESETS: Record<string, Polygon> = {
   rectangle: [[8, 10], [32, 10], [32, 22], [8, 22]],
   L: [[8, 6], [34, 6], [34, 18], [20, 18], [20, 32], [8, 32]],
   T: [[6, 8], [34, 8], [34, 18], [24, 18], [24, 32], [16, 32], [16, 18], [6, 18]],
@@ -9,4 +11,4 @@ export const PRESETS = {
   lGables: [[8, 6], [34, 6], [34, 18], [20, 18], [20, 32], [8, 32]],
 };
 // edges (index i = vertex i -> i+1) that start as gables
-export const GABLES = { gableHouse: [1, 3], lGables: [1, 4] };
+export const GABLES: Record<string, number[]> = { gableHouse: [1, 3], lGables: [1, 4] };

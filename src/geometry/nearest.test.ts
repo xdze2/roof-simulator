@@ -1,10 +1,11 @@
-// node test_nearest.mjs
-import { straightSkeleton } from './skeleton.js';
-import { makeNearest, pointInPoly } from './nearest.js';
-import { PRESETS } from './presets.js';
+import { describe, it, expect } from 'vitest';
+import { straightSkeleton } from './skeleton';
+import type { Polygon } from './skeleton';
+import { makeNearest, pointInPoly } from './nearest';
+import { PRESETS } from './presets';
 
 let fails = 0;
-function run(name, pts) {
+function run(name: string, pts: Polygon) {
   const sk = straightSkeleton(pts), P = sk.poly, nn = makeNearest(P);
   let mism = 0, tot = 0, reflexOwned = 0, tooLow = 0;
   for (let x = 0; x <= 40; x += 0.37) for (let y = 0; y <= 40; y += 0.37) {
@@ -25,10 +26,15 @@ function run(name, pts) {
   console.log(`${name}: samples=${tot} owner mismatches=${mism} reflex-vertex-owned=${reflexOwned} dist<height=${tooLow}`);
   return { mism, reflexOwned, tooLow, tot };
 }
+describe('nearest-segment field', () => {
+it('matches the skeleton heights', () => {
+fails = 0;
 const r = run('rectangle', PRESETS.rectangle);
 if (r.mism || r.reflexOwned || r.tooLow || !r.tot) fails++;
 const l = run('L', PRESETS.L);
 if (l.reflexOwned === 0 || l.tooLow) fails++;
 for (const k of ['T', 'U', 'irregular']) { const s = run(k, PRESETS[k]); if (s.tooLow) fails++; }
 console.log(fails ? 'FAIL' : 'nearest checks passed');
-process.exit(fails ? 1 : 0);
+expect(fails).toBe(0);
+});
+});

@@ -1,16 +1,21 @@
-// node test_skeleton.mjs
-import { straightSkeleton, polyArea, isSimple } from './skeleton.js';
-import { PRESETS } from './presets.js';
+import { describe, it, expect } from 'vitest';
+import { straightSkeleton, polyArea, isSimple } from './skeleton';
+import type { Vec2, Polygon, SkFacePoint } from './skeleton';
+import { PRESETS } from './presets';
 
+// failures are counted (not thrown) so the random-polygon sections can tally them, as in the original script
 let fails = 0;
+const failMsgs: string[] = [];
 const rawLog = console.log;
-function check(name, cond, msg) { if (!cond) { fails++; rawLog('  FAIL', name, msg || ''); } }
+function check(name: string, cond: boolean, msg?: string): void { if (!cond) { fails++; failMsgs.push(`${name} ${msg || ''}`); rawLog('  FAIL', name, msg || ''); } }
+function reset(): void { fails = 0; failMsgs.length = 0; }
 
-function segCross(a, b, c, d) {
-  const o = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+type P2 = { x: number; y: number };
+function segCross(a: P2, b: P2, c: P2, d: P2): boolean {
+  const o = (p: P2, q: P2, r: P2) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
   return o(a, b, c) * o(a, b, d) < -1e-12 && o(c, d, a) * o(c, d, b) < -1e-12;
 }
-function faceSimple(f) {
+function faceSimple(f: P2[]): boolean {
   const n = f.length;
   for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
     if (j === i + 1 || (i === 0 && j === n - 1)) continue;
@@ -18,9 +23,9 @@ function faceSimple(f) {
   }
   return true;
 }
-const area = (f) => polyArea(f.map((p) => [p.x, p.y]));
+const area = (f: P2[]) => polyArea(f.map((p) => [p.x, p.y]));
 
-function validate(name, pts, weights) {
+function validate(name: string, pts: Polygon, weights?: number[]) {
   const sk = straightSkeleton(pts, weights);
   const A = polyArea(sk.poly);
   const tol = 1e-6 * Math.max(1, A);
@@ -41,8 +46,8 @@ function validate(name, pts, weights) {
   });
   check(name, Math.abs(sum - A) < tol, `face area sum ${sum} vs polygon ${A}`);
   // interior nodes: equidistant to all faces meeting there (same check from the node side)
-  const seen = new Map();
-  sk.faces.forEach((f, i) => f.forEach((p) => { if (!seen.has(p.node)) seen.set(p.node, []); seen.get(p.node).push(i); }));
+  const seen = new Map<number, number[]>();
+  sk.faces.forEach((f, i) => f.forEach((p) => { if (!seen.has(p.node)) seen.set(p.node, []); seen.get(p.node)!.push(i); }));
   for (const [k, fs] of seen) {
     const nd = sk.nodes[k];
     if (nd.t < 1e-9) continue;
@@ -67,6 +72,9 @@ function validate(name, pts, weights) {
   return sk;
 }
 
+describe('straight skeleton', () => {
+it('presets and extra shapes', () => {
+reset();
 for (const [name, pts] of Object.entries(PRESETS)) {
   validate(name, pts);
   validate(name + ' (CW input)', pts.slice().reverse());
@@ -79,10 +87,14 @@ validate('H', [[0, 0], [8, 0], [8, 10], [16, 10], [16, 0], [24, 0], [24, 30], [1
 validate('comb', [[0, 0], [30, 0], [30, 20], [24, 20], [24, 8], [20, 8], [20, 20], [10, 20], [10, 8], [6, 8], [6, 20], [0, 20]]);
 validate('collinear vertex', [[0, 0], [5, 0], [10, 0], [10, 8], [0, 8]]);
 
+expect(failMsgs).toEqual([]);
+});
+
 // ---- weights / gables ----
-const cot = (deg) => 1 / Math.tan((deg * Math.PI) / 180);
-{
-  const R = [[8, 10], [32, 10], [32, 22], [8, 22]];
+const cot = (deg: number) => 1 / Math.tan((deg * Math.PI) / 180);
+it('weights and gables', () => {
+  reset();
+  const R: Polygon = [[8, 10], [32, 10], [32, 22], [8, 22]];
   const a = 40, sk = validate('gable house', R, [cot(a), 0, cot(a), 0]);
   const planF = sk.faces.filter((f, i) => sk.edges[i].w > 0), gabF = sk.faces.filter((f, i) => sk.edges[i].w === 0);
   check('gable house', planF.length === 2 && gabF.length === 2, 'expected 2 roof + 2 gable faces');
@@ -109,43 +121,54 @@ const cot = (deg) => 1 / Math.tan((deg * Math.PI) / 180);
   validate('L with gables', PRESETS.L, [cot(40), 0, cot(40), cot(40), 0, cot(40)]);
   validate('L mixed slopes', PRESETS.L, [cot(30), cot(45), cot(60), cot(35), cot(50), cot(40)]);
   validate('T 1 gable', PRESETS.T, PRESETS.T.map((_, i) => (i === 4 ? 0 : cot(40))));
-}
+  expect(failMsgs).toEqual([]);
+});
 
 // random simple polygons: star-shaped with random radii (always simple)
 let seed = 12345;
 const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+it('random star-shaped polygons', () => {
+reset();
 let rOk = 0, rFail = 0, rTotal = 0;
 for (let k = 0; k < 300; k++) {
   const m = 5 + Math.floor(rnd() * 12);
   const angs = Array.from({ length: m }, () => rnd() * Math.PI * 2).sort((a, b) => a - b);
-  const pts = angs.map((a) => { const r = 5 + rnd() * 20; return [20 + r * Math.cos(a), 20 + r * Math.sin(a)]; });
+  const pts = angs.map((a): Vec2 => { const r = 5 + rnd() * 20; return [20 + r * Math.cos(a), 20 + r * Math.sin(a)]; });
   if (!isSimple(pts) || polyArea(pts) < 20) continue;
   rTotal++;
   const before = fails;
   const log = console.log; console.log = () => {};
-  try { validate('rand' + k, pts); } catch (e) { fails++; console.log = log; log('  FAIL rand' + k, e.message, JSON.stringify(pts)); }
+  try { validate('rand' + k, pts); } catch (e) { fails++; failMsgs.push('rand' + k); console.log = log; log('  FAIL rand' + k, (e as Error).message, JSON.stringify(pts)); }
   console.log = log;
   if (fails === before) rOk++; else rFail++;
 }
 console.log(`random star-shaped polygons: ${rOk}/${rTotal} ok`);
+expect(rFail).toBe(0);
+expect(failMsgs).toEqual([]);
+});
+
+it('random weights (and gables, informational)', () => {
+reset();
 // random weights in [0.5, 2] (and a variant with ~20% gables); failures are counted and listed, not hidden
-for (const [label, pGable] of [['weights in [0.5,2]', 0], ['weights in [0.5,2] + 20% gables', 0.2]]) {
-  let ok = 0, tot = 0; const bad = []; const failsBefore = fails;
+const variants: [string, number][] = [['weights in [0.5,2]', 0], ['weights in [0.5,2] + 20% gables', 0.2]];
+for (const [label, pGable] of variants) {
+  let ok = 0, tot = 0; const bad: number[] = []; const failsBefore = fails; const msgsBefore = failMsgs.length;
   for (let k = 0; k < 300; k++) {
     const m = 5 + Math.floor(rnd() * 12);
     const angs = Array.from({ length: m }, () => rnd() * Math.PI * 2).sort((a, b) => a - b);
-    const pts = angs.map((a) => { const r = 5 + rnd() * 20; return [20 + r * Math.cos(a), 20 + r * Math.sin(a)]; });
+    const pts = angs.map((a): Vec2 => { const r = 5 + rnd() * 20; return [20 + r * Math.cos(a), 20 + r * Math.sin(a)]; });
     if (!isSimple(pts) || polyArea(pts) < 20) continue;
     const ws = pts.map(() => (rnd() < pGable ? 0 : 0.5 + rnd() * 1.5));
     tot++;
     const before = fails; const log = console.log; console.log = () => {};
-    try { validate('w' + k, pts, ws); } catch (e) { fails++; console.log = log; log('  FAIL w' + k, e.message); }
+    try { validate('w' + k, pts, ws); } catch (e) { fails++; failMsgs.push('w' + k); console.log = log; log('  FAIL w' + k, (e as Error).message); }
     console.log = log;
     if (fails === before) ok++; else bad.push(k);
   }
   console.log(`random ${label}: ${ok}/${tot} ok${bad.length ? ' failing: ' + bad.join(',') : ''}`);
-  if (pGable > 0) fails = failsBefore; // random gables incl. adjacent gables (pinned corners) are informational only
+  if (pGable > 0) { fails = failsBefore; failMsgs.length = msgsBefore; } // random gables incl. adjacent gables (pinned corners) are informational only
 }
+expect(failMsgs).toEqual([]);
+});
+});
 // random orthogonal-ish (grid snapped) shapes to hit simultaneous events
-console.log(fails ? `\n${fails} FAILURE(S)` : '\nall checks passed');
-process.exit(fails ? 1 : 0);

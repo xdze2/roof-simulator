@@ -12,12 +12,23 @@ export const c2 = $<HTMLCanvasElement>('c2d');
 const ctx = c2.getContext('2d')!;
 
 export const VIEW = { w: 1, h: 1, s: 10, ox: 0, oy: 0 };
+/** the floating tour column covers the left of the plan canvas (wide layout): the plan is fitted to what is left */
+function coveredLeft(): number {
+  const col = $('tourCol'), main = $('main');
+  if (getComputedStyle(col).position !== 'absolute') { main.style.removeProperty('--inset'); return 0; }
+  const card = [...col.children].find((e) => !(e as HTMLElement).hidden) as HTMLElement | undefined;
+  const inset = card ? Math.ceil(card.getBoundingClientRect().right - main.getBoundingClientRect().left) + 8 : 0;
+  main.style.setProperty('--inset', inset + 'px');   // overlays and pane widths follow
+  return inset;
+}
 export function resize2d(): void {
+  const inset = coveredLeft();
   const r = c2.getBoundingClientRect(), dpr = devicePixelRatio || 1;
   c2.width = Math.round(r.width * dpr); c2.height = Math.round(r.height * dpr);
   VIEW.w = r.width; VIEW.h = r.height;
-  VIEW.s = Math.min(r.width, r.height) / 42;
-  VIEW.ox = r.width / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
+  const aw = Math.max(r.width - inset, 120);
+  VIEW.s = Math.min(aw, r.height) / 42;
+  VIEW.ox = inset + aw / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw2d();
 }

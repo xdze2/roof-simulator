@@ -3,7 +3,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Skeleton } from '../geometry/skeleton';
 import { fieldFor } from '../geometry/nearest';
 import { $, cutFraction } from '../dom';
-import { state, WALL_H, GRID_STEP } from '../state';
+import { isolines, gridIsolines } from '../geometry/isolines';
+import type { IsoSegment } from '../geometry/isolines';
+import { state, WALL_H, GRID_STEP, ISO_STEP } from '../state';
 import type { CameraPreset } from '../state';
 import { colorHex } from './colors';
 
@@ -106,7 +108,7 @@ function earClip(f: P2[]): [number, number, number][] { // f: CCW simple polygon
 }
 
 // plan (x,y) -> three (x, z, -y)
-function buildField(sk: Skeleton, k: number): void {
+function buildField(sk: Skeleton, k: number): IsoSegment[] {
   const P = sk.poly, n = P.length, nn = fieldFor($<HTMLSelectElement>('mode').value, P);
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const p of P) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
@@ -133,7 +135,18 @@ function buildField(sk: Skeleton, k: number): void {
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.computeVertexNormals();
   group.add(solid(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), false));
+  // contours of the same field: heights are multiples of ISO_STEP (height = d * k)
+  let dmax = 0; for (let a = 0; a < H.length; a++) if (S[a] >= 0 && H[a] > dmax) dmax = H[a];
+  const levels: number[] = [];
+  for (let m = 1; m * ISO_STEP < dmax * k - 1e-9 && m <= 500; m++) levels.push(m * ISO_STEP / k);
+  const ok = S.map((q) => (q >= 0 ? 1 : 0));
+  return gridIsolines(H, ok, nx, ny, x0, y0, h, levels).map((sg) => ({ ...sg, h: sg.h * k }));
 }
+
+const isoMat = new THREE.LineBasicMaterial({ color: 0x555555 }); // depth-tested: hidden behind the roof
+const ISO_LIFT = 0.04; // m above the surface, against z-fighting
+let lastIso = false;
+function isoOn(): boolean { return $<HTMLInputElement>('iso').checked; }
 
 export function build3d(refit: boolean): void {
   const sk = state.sk;
@@ -143,7 +156,9 @@ export function build3d(refit: boolean): void {
   updateCut();
   if (!sk) return;
   const k = Math.tan(+$<HTMLInputElement>('slope').value * Math.PI / 180);
-  if ($<HTMLSelectElement>('mode').value !== 'skel') buildField(sk, k);
+  const on = isoOn(); lastIso = on;
+  let iso: IsoSegment[] = [];
+  if ($<HTMLSelectElement>('mode').value !== 'skel') { const r = buildField(sk, k); if (on) iso = r; }
   else sk.faces.forEach((f, i) => {
     if (f.length < 3) return;
     const pos: number[] = [];
@@ -166,6 +181,14 @@ export function build3d(refit: boolean): void {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
     group.add(solid(g, new THREE.MeshLambertMaterial({ color: 0xe9e2d0, side: THREE.DoubleSide })));
   }
+  if (on) {
+    if ($<HTMLSelectElement>('mode').value === 'skel') iso = isolines(sk, ISO_STEP);
+    const pos: number[] = [];
+    for (const sg of iso) pos.push(sg.a[0], WALL_H + sg.h + ISO_LIFT, -sg.a[1], sg.b[0], WALL_H + sg.h + ISO_LIFT, -sg.b[1]);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    group.add(new THREE.LineSegments(g, isoMat));
+  }
   // footprint outline at eaves
   const lp = sk.poly.map((p) => new THREE.Vector3(p[0], WALL_H, -p[1]));
   group.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({ color: 0x222222 })));
@@ -181,4 +204,6 @@ export function resize3d(): void {
   renderer.setPixelRatio(devicePixelRatio || 1); renderer.setSize(r.width, r.height, false);
   camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix();
 }
-export function loop(): void { controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); }
+export function loop(): void {
+  if (isoOn() !== lastIso) build3d(false); // checkbox toggled (toolbar or tour)
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); }

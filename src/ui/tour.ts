@@ -1,4 +1,4 @@
-// Guided tour: floating assistant panel (accordion of steps, prev/next) and application of a step to the views.
+// Guided tour: floating assistant panel (accordion of steps) and application of a step to the views.
 import { $ } from '../dom';
 import { state } from '../state';
 import { STEPS, stepShape } from '../tour/steps';
@@ -36,12 +36,10 @@ export interface Tour {
 export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
   root.innerHTML = `<div class="tour-head"><b data-i18n="tour.title"></b> <span class="tour-count"></span>
 <button class="tour-x" data-i18n-aria="tour.close" data-i18n-title="tour.close">&times;</button></div>
-<ol class="tour-list"></ol>
-<div class="tour-nav"><button class="tour-prev" data-i18n="tour.prev"></button><button class="tour-next" data-i18n="tour.next"></button></div>`;
+<ol class="tour-list"></ol>`;
   applyI18n(root);
   const q = <T extends HTMLElement>(sel: string): T => root.querySelector(sel) as T;
   const list = q('.tour-list'), count = q('.tour-count'), closeBtn = q('.tour-x');
-  const prev = q<HTMLButtonElement>('.tour-prev'), next = q<HTMLButtonElement>('.tour-next');
   const toggle = $<HTMLButtonElement>('tourToggle');
   let cur = -1;
   const freeStep = steps.find((s) => s.free);
@@ -88,7 +86,6 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
       li.classList.toggle('on', k === i);
       li.querySelector('.tour-title')!.setAttribute('aria-expanded', String(k === i));
     });
-    prev.disabled = i === 0; next.disabled = i === steps.length - 1;
     syncCut();
     (list.children[i] as HTMLElement).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     if (!root.hidden) setUrl(s.id, applied);
@@ -123,8 +120,7 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
     setUrl(null);
   }
 
-  onLangChange(() => { applyI18n(root); render(); });   // no re-apply: the user's drawing stays
-  prev.onclick = () => go(cur - 1); next.onclick = () => go(cur + 1);
+  onLangChange(() => { applyI18n(root); render(); resize2d(); resize3d(); });   // no re-apply: the user's drawing stays
   closeBtn.onclick = close;
   toggle.onclick = () => (root.hidden ? open() : close());
 

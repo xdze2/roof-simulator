@@ -9,21 +9,8 @@
 <header>
   <div id="brand"><h1 data-i18n="site.title">Roof Simulator</h1>
     <p id="desc" data-i18n="site.desc"></p></div>
+  <div id="bar">
   <div id="tools">
-    <fieldset class="grp"><legend data-i18n="group.drawing">Drawing</legend>
-      <button id="clear" data-i18n="btn.clear" data-i18n-title="btn.clear.title">Clear</button>
-      <select id="preset" data-i18n-aria="preset.label">
-        <option value="" data-i18n="preset.placeholder"></option>
-        <option value="rectangle" data-i18n="preset.rectangle">Rectangle</option>
-        <option value="L" data-i18n="preset.L">L</option>
-        <option value="T" data-i18n="preset.T">T</option>
-        <option value="U" data-i18n="preset.U">U</option>
-        <option value="irregular" data-i18n="preset.irregular">Irregular</option>
-        <option value="gableHouse" data-i18n="preset.gableHouse">Gable house</option>
-        <option value="lGables" data-i18n="preset.lGables">L with gables</option>
-      </select>
-      <button id="resetW" data-i18n="btn.resetAll" data-i18n-title="btn.resetAll.title">Reset all</button>
-    </fieldset>
     <fieldset class="grp"><legend data-i18n="group.roof">Roof</legend>
       <label><span data-i18n="mode.label">Method</span> <select id="mode">
         <option value="skel" data-i18n="mode.skel"></option>
@@ -41,14 +28,32 @@
     <span id="msg" role="alert" hidden></span>
   </div>
   <div id="right">
-    <button id="tourToggle" data-i18n="btn.tour" data-i18n-title="btn.tour.title">Tour</button>
     <div id="langSel" role="group" data-i18n-aria="lang.label"><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
     <button id="about" data-i18n="btn.about">About</button>
   </div>
+  </div>
 </header>
 <div id="main">
+<div id="tourCol">
+  <button id="tourToggle" hidden data-i18n="btn.tour" data-i18n-title="btn.tour.title">Guided tour</button>
+  <aside id="tour" data-i18n-aria="tour.aria"></aside>
+</div>
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>
+  <div id="drawBar" role="toolbar" data-i18n-aria="group.drawing">
+    <button id="clear" data-i18n="btn.clear" data-i18n-title="btn.clear.title">Clear</button>
+    <select id="preset" data-i18n-aria="preset.label">
+      <option value="" data-i18n="preset.placeholder"></option>
+      <option value="rectangle" data-i18n="preset.rectangle">Rectangle</option>
+      <option value="L" data-i18n="preset.L">L</option>
+      <option value="T" data-i18n="preset.T">T</option>
+      <option value="U" data-i18n="preset.U">U</option>
+      <option value="irregular" data-i18n="preset.irregular">Irregular</option>
+      <option value="gableHouse" data-i18n="preset.gableHouse">Gable house</option>
+      <option value="lGables" data-i18n="preset.lGables">L with gables</option>
+    </select>
+    <button id="resetW" data-i18n="btn.resetAll" data-i18n-title="btn.resetAll.title">Reset all</button>
+  </div>
     <div id="edgeBox" hidden>
       <div class="ehead"><span data-i18n="edge.title">Edge</span> <b id="eN"></b></div>
       <div class="erow"><label class="rad"><input type="radio" name="em" value="hip"> <span data-i18n="edge.hip">Hip</span></label>
@@ -63,7 +68,6 @@
     <div class="hint" data-i18n="hint"></div></div></div>
   <div class="pane"><canvas id="c3d"></canvas></div>
 </div>
-<aside id="tour" data-i18n-aria="tour.aria"></aside>
 </div>
 <div id="modal" hidden><div class="box" role="dialog" data-i18n-aria="about.aria">
   <button class="x" id="modalX" data-i18n-aria="about.close">&times;</button>

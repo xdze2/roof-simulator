@@ -31,7 +31,7 @@ const en = {
   'iso.label': 'isolines',
   'cut.label': 'level',
   'cut.title': 'level line and horizontal cut plane, as a fraction of the ridge height',
-  'btn.tour': 'Tour',
+  'btn.tour': 'Guided tour',
   'btn.tour.title': 'show / hide the guided tour (PageUp / PageDown: previous / next step)',
   'btn.about': 'About',
   'lang.label': 'Language',
@@ -78,7 +78,7 @@ const en = {
 };
 
 const fr: Record<keyof typeof en, string> = {
-  'site.title': 'Simulateur de toit',
+  'site.title': 'Roof Simulator',
   'site.desc': 'Dessine un plan, obtiens un toit à pans : une démo interactive du squelette droit dans le navigateur.',
   'group.drawing': 'Dessin',
   'group.roof': 'Toit',
@@ -105,7 +105,7 @@ const fr: Record<keyof typeof en, string> = {
   'iso.label': 'isolignes',
   'cut.label': 'niveau',
   'cut.title': 'ligne de niveau et plan de coupe horizontal, en fraction de la hauteur du faîtage',
-  'btn.tour': 'Visite',
+  'btn.tour': 'Visite guidée',
   'btn.tour.title': 'afficher / masquer la visite guidée (PageUp / PageDown : étape précédente / suivante)',
   'btn.about': 'À propos',
   'lang.label': 'Langue',

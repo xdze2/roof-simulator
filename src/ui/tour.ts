@@ -105,7 +105,11 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
     show(k, doApply); if (doApply) applyStep(steps[k]);
   }
 
-  const relayout = (): void => { toggle.setAttribute('aria-pressed', String(!root.hidden)); resize2d(); resize3d(); };
+  const relayout = (): void => {
+    toggle.setAttribute('aria-pressed', String(!root.hidden)); toggle.setAttribute('aria-expanded', String(!root.hidden));
+    toggle.hidden = !root.hidden;   // the reopen card only shows while the panel is closed
+    resize2d(); resize3d();
+  };
   function open(): void {
     if (!root.hidden) return;
     root.hidden = false; relayout();

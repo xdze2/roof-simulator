@@ -16,12 +16,8 @@ export function resize2d(): void {
   const r = c2.getBoundingClientRect(), dpr = devicePixelRatio || 1;
   c2.width = Math.round(r.width * dpr); c2.height = Math.round(r.height * dpr);
   VIEW.w = r.width; VIEW.h = r.height;
-  // the floating tour panel hides the left of the plan: fit the drawing in the uncovered part
-  const tour = document.getElementById('tour');
-  const inset = tour && !tour.hidden && getComputedStyle(tour).position === 'absolute' ? tour.offsetLeft + tour.offsetWidth + 8 : 0;
-  const w = r.width - inset;
-  VIEW.s = Math.min(w, r.height) / 42;
-  VIEW.ox = inset + w / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
+  VIEW.s = Math.min(r.width, r.height) / 42;
+  VIEW.ox = r.width / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw2d();
 }

@@ -5,16 +5,17 @@
 :root { --bg:#f4f4f1; --fg:#222; --panel:#fff; --line:#cfcfc8; }
 * { box-sizing: border-box; }
 body { margin:0; font:14px system-ui, sans-serif; background:var(--bg); color:var(--fg); height:100vh; display:flex; flex-direction:column; }
-header { padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:flex-start; border-bottom:1px solid var(--line); background:var(--panel); }
-#brand { flex:1 1 230px; max-width:560px; min-width:170px; }
-header h1 { font-size:15px; margin:0 0 2px; }
-#desc { margin:0; font-size:11.5px; line-height:1.35; color:#777; }
+header { padding:8px 12px; display:flex; flex-direction:column; gap:8px; border-bottom:1px solid var(--line); background:var(--panel); }
+#brand { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
+header h1 { font-size:16px; margin:0; white-space:nowrap; }
+#desc { margin:0; flex:1 1 320px; font-size:13px; line-height:1.4; color:#333; }
+#bar { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:flex-start; }
 #tools { flex:1 1 auto; display:flex; flex-wrap:wrap; gap:8px 10px; align-items:stretch; min-width:0; }
 .grp { margin:0; padding:2px 10px 6px; border:1px solid var(--line); border-radius:6px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; min-width:0; }
 .grp legend { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:#777; padding:0 4px; }
 #tools > #note, #tools > #msg { align-self:center; }
 #note { color:#7a5200; }
-#right { display:flex; align-items:center; gap:8px; margin-left:auto; }
+#right { display:flex; align-self:center; align-items:center; gap:8px; margin-left:auto; }
 #langSel { display:flex; }
 #langSel button { border-radius:0; padding:4px 8px; margin-left:-1px; }
 #langSel button:first-child { border-radius:4px 0 0 4px; margin-left:0; }
@@ -25,7 +26,7 @@ button { font:inherit; padding:4px 10px; border:1px solid #aaa; background:#f8f8
 button:hover { background:#eee; }
 label { display:flex; align-items:center; gap:6px; }
 #panes { flex:1; display:flex; min-height:0; }
-.pane { flex:1; min-width:0; position:relative; }
+.pane { flex:1; min-width:0; position:relative; container-type:inline-size; }
 .pane + .pane { border-left:1px solid var(--line); }
 canvas { display:block; width:100%; height:100%; }
 #c2d { background:#fbfbf8; cursor:crosshair; }
@@ -37,6 +38,9 @@ canvas { display:block; width:100%; height:100%; }
 #edgeBox .ehead { font-weight:600; } #edgeBox .erow { display:flex; align-items:center; gap:8px; } #edgeBox { width:340px; max-width:calc(100% - 16px); } #edgeBox .rad { min-width:4.2em; } #edgeBox .sl { white-space:nowrap; } #edgeBox .sl b { display:inline-block; width:3ch; text-align:right; font-variant-numeric:tabular-nums; } #edgeBox .glob { white-space:nowrap; }
 #edgeBox .erow:has(input:disabled) .sl, #edgeBox .glob:has(input:disabled) { opacity:.4; }
 #edgeBox input[type=range] { width:90px; flex:none; } #edgeBox input:disabled { opacity:.4; }
+#drawBar { position:absolute; left:8px; top:8px; max-width:calc(100% - 16px); display:flex; flex-wrap:wrap; align-items:center; gap:6px; background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:6px; padding:4px 6px; }
+#drawBar select, #drawBar button { padding:2px 8px; }
+@container (max-width:720px) { #edgeBox, #vertBox { top:52px; } }   /* narrow pane: stack under the drawing toolbar */
 #bl { position:absolute; left:8px; bottom:6px; max-width:calc(100% - 16px); display:flex; flex-direction:column; align-items:flex-start; gap:4px; pointer-events:none; }
 #legend { font-size:11px; color:#444; background:rgba(255,255,255,.8); padding:3px 6px; border-radius:3px; pointer-events:none; line-height:1.5; }
 #legend:empty { display:none; } #legend .li { display:flex; align-items:center; gap:6px; } #legend i { display:inline-block; width:22px; border-top-style:solid; }
@@ -50,8 +54,11 @@ canvas { display:block; width:100%; height:100%; }
 #modal .x { position:absolute; right:10px; top:6px; font-size:22px; border:0; background:none; cursor:pointer; }
 #main { flex:1; display:flex; min-height:0; }
 #panes { min-width:0; }
-#main { position:relative; }
-#tour { position:absolute; left:8px; top:8px; z-index:5; width:340px; max-width:calc(100% - 16px); max-height:calc(100% - 16px); display:flex; flex-direction:column;
+#tourCol { flex:none; display:flex; flex-direction:column; align-items:flex-start; padding:8px 0 8px 8px; min-height:0; max-width:100%; }
+#tourToggle { background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.16), 0 1px 3px rgba(0,0,0,.12); padding:8px 14px; font-weight:600; white-space:nowrap; }
+#tourToggle:hover { background:#ffe9a8; }
+#tourToggle[hidden] { display:none; }
+#tour { width:340px; max-width:100%; min-height:0; flex:0 1 auto; display:flex; flex-direction:column;
   background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.15); padding:8px 12px 10px; line-height:1.45; }
 #tour[hidden] { display:none; }
 #tour .tour-head { display:flex; align-items:baseline; gap:8px; font-size:15px; flex:none; }
@@ -74,7 +81,6 @@ canvas { display:block; width:100%; height:100%; }
 #tour .tour-cutv { min-width:4.5ch; font-variant-numeric:tabular-nums; text-align:right; }
 #tour .tour-nav { display:flex; gap:8px; justify-content:space-between; flex:none; }
 #tour .tour-nav button:disabled { opacity:.4; cursor:default; }
-#tourToggle[aria-pressed=true] { background:#ffe9a8; }
 #cutBox input[type=range] { width:100px; }
 #mode { max-width:210px; }
 #cutV { display:inline-block; min-width:4.5ch; font-variant-numeric:tabular-nums; }
@@ -84,9 +90,7 @@ canvas { display:block; width:100%; height:100%; }
   #panes { flex-direction:column; flex:none; }
   .pane { height:min(70vh, 120vw); flex:none; }
   .pane + .pane { border-left:0; border-top:1px solid var(--line); }
-  #tour { position:static; order:2; width:auto; max-width:none; max-height:none; border-radius:0; box-shadow:none; border-width:1px 0 0; padding:10px 16px; }
+  #tourCol { order:2; padding:8px; align-items:stretch; }
+  #tour { width:auto; border-radius:10px; padding:10px 14px; }
   #tour .tour-list { overflow:visible; }
-}
-@media (min-width:801px) {
-  #main:has(#tour:not([hidden])) #bl { left:356px; max-width:calc(100% - 364px); }   /* keep legend and hint clear of the floating panel */
 }

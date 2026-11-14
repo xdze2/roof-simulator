@@ -56,7 +56,7 @@ export const STEPS: Step[] = [
 <p>Drag the <b>level</b> slider just below: the front advances, and when two sides meet it leaves the skeleton behind it. The <b>isolines</b> checkbox in the toolbar shows all the contour lines at once.</p>`,
       fr: `<p>Même pente, même hauteur à même distance du mur. La ligne rouge est la <b>courbe de niveau</b> à la hauteur de coupe (plan bleu translucide en 3D).</p>
 <p>En plan, c'est le contour <b>décalé vers l'intérieur</b> : « l'eau qui monte », ou un front qui avance à vitesse constante depuis les murs.</p>
-<p>Fais glisser le curseur <b>level</b> juste en dessous : le front avance, et quand deux côtés se rejoignent, il laisse derrière lui le squelette. La case <b>isolines</b> de la barre d'outils affiche toutes les courbes de niveau d'un coup.</p>`,
+<p>Fais glisser le curseur <b>niveau</b> juste en dessous : le front avance, et quand deux côtés se rejoignent, il laisse derrière lui le squelette. La case <b>isolignes</b> de la barre d'outils affiche toutes les courbes de niveau d'un coup.</p>`,
     },
   },
   {
@@ -98,7 +98,7 @@ export const STEPS: Step[] = [
 <p>Click an edge, then choose <b>Gable</b> in the box that opens (or shift-click, or press G) to switch it between gable and sloped face.</p>`,
       fr: `<p>Un côté peut être déclaré <b>pignon</b> : son pan est vertical (pente de 90°), le mur monte jusqu'au faîtage.</p>
 <p>Ici les deux petits côtés sont des pignons (traits noirs épais). Le toit n'a plus que deux pans, à deux versants, avec un faîtage parallèle aux longs côtés.</p>
-<p>Clique un côté puis choisis <b>Gable</b> dans la boîte qui s'ouvre (ou maj-clic, ou touche G) pour le basculer en pignon ou en pan.</p>`,
+<p>Clique un côté puis choisis <b>Pignon</b> dans la boîte qui s'ouvre (ou maj-clic, ou touche G) pour le basculer en pignon ou en pan.</p>`,
     },
   },
   {
@@ -123,7 +123,7 @@ export const STEPS: Step[] = [
 <p>The principle is the same (each face is a plane, the height is a weighted distance); only the weight of each edge changes. Click an edge, untick <b>global</b> and set its slope.</p>`,
       fr: `<p>Donnons au long côté du bas une pente faible (22°) et à celui du haut une pente forte (58°). Les petits côtés restent à 40°.</p>
 <p>Le pan raide monte plus vite : le faîtage se décale vers le mur le plus raide, et les arêtiers <b>ne sont plus des bissectrices</b>.</p>
-<p>Le principe reste le même (chaque pan est un plan, la hauteur est une distance pondérée), seul le poids de chaque côté change. Clique un côté, décoche <b>global</b> et règle sa pente.</p>`,
+<p>Le principe reste le même (chaque pan est un plan, la hauteur est une distance pondérée), seul le poids de chaque côté change. Clique un côté, décoche <b>globale</b> et règle sa pente.</p>`,
     },
   },
   {
@@ -169,11 +169,11 @@ export const STEPS: Step[] = [
     id: 'libre', free: true,
     title: { en: 'Free mode: draw your own roof', fr: 'Mode libre : dessine ton toit' },
     html: {
-      en: `<p>Over to you. The toolbar controls stay active: presets, slope, display method, isolines, level.</p>
+      en: `<p>Over to you. The toolbar controls stay active: presets, slope, method, isolines, level.</p>
 <p>Click <b>Clear</b>, then click in the plan to place points; click the first point (or press Enter) to close. Drag vertices or edges to reshape; double-click an edge to add a point, right-click a point to delete it.</p>
 <p>Click an edge to change its slope or make it a gable.</p>`,
-      fr: `<p>À toi de jouer. Les commandes du bandeau restent actives : presets, pente, mode d'affichage, isolines, level.</p>
-<p>Clique <b>Clear</b>, puis clique dans le plan pour poser des points ; clique le premier point (ou Entrée) pour fermer. Fais glisser les sommets ou les côtés pour modifier la forme ; double-clique un côté pour ajouter un point, clic droit sur un point pour le supprimer.</p>
+      fr: `<p>À toi de jouer. Les commandes du bandeau restent actives : modèles, pente, méthode, isolignes, niveau.</p>
+<p>Clique <b>Effacer</b>, puis clique dans le plan pour poser des points ; clique le premier point (ou Entrée) pour fermer. Fais glisser les sommets ou les côtés pour modifier la forme ; double-clique un côté pour ajouter un point, clic droit sur un point pour le supprimer.</p>
 <p>Clique un côté pour changer sa pente ou en faire un pignon.</p>`,
     },
   },

@@ -86,6 +86,10 @@ validate('plus', [[10, 0], [20, 0], [20, 10], [30, 10], [30, 20], [20, 20], [20,
 validate('H', [[0, 0], [8, 0], [8, 10], [16, 10], [16, 0], [24, 0], [24, 30], [16, 30], [16, 20], [8, 20], [8, 30], [0, 30]]);
 validate('comb', [[0, 0], [30, 0], [30, 20], [24, 20], [24, 8], [20, 8], [20, 20], [10, 20], [10, 8], [6, 8], [6, 20], [0, 20]]);
 validate('collinear vertex', [[0, 0], [5, 0], [10, 0], [10, 8], [0, 8]]);
+// vertex event: the two reflex corners of a T with a slanted stem meet at the same point and time
+for (const top of [[15, 32], [10, 32], [3, 38]] as Vec2[]) {
+  validate(`slanted T ${top}`, [[6, 8], [34, 8], [34, 18], [24, 18], [24, 32], top, [16, 18], [6, 18]]);
+}
 
 expect(failMsgs).toEqual([]);
 });

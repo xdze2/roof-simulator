@@ -298,6 +298,23 @@ export function straightSkeleton(input: Array<Vec2 | { x: number; y: number }>, 
       const { V, W, N } = ev;
       const x = posX(V, t), y = posY(V, t);
       const nd = nodeAt(x, y, t);
+      // vertex event: V reaches an endpoint U of the edge at the very moment U gets there
+      // (e.g. two reflex vertices meeting). Splitting the edge would leave a zero-length piece
+      // and loop forever; instead reconnect V=(a,b), U=(c,d) into X=(a,d) and Y=(c,b).
+      const at = (u: WfVertex) => Math.hypot(posX(u, t) - x, posY(u, t) - y) < tol * 3;
+      const U = at(W) ? W : at(N) ? N : null;
+      if (U && U !== V.prev && U !== V.next) {
+        killVertexArc(V, nd); killVertexArc(U, nd);
+        active.delete(V); active.delete(U);
+        const X = makeVertex(x, y, t, V.eL, U.eR, nd);
+        const Y = makeVertex(x, y, t, U.eL, V.eR, nd);
+        const Vp = V.prev, Vn = V.next, Up = U.prev, Un = U.next;
+        X.prev = Vp; Vp.next = X; X.next = Un; Un.prev = X;
+        Y.prev = Up; Up.next = Y; Y.next = Vn; Vn.prev = Y;
+        active.add(X); active.add(Y);
+        settle([X, Y]);
+        continue;
+      }
       killVertexArc(V, nd);
       const Vp = V.prev, Vn = V.next;
       active.delete(V);

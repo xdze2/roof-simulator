@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { straightSkeleton } from './skeleton';
 import type { Polygon } from './skeleton';
-import { makeNearest, pointInPoly } from './nearest';
+import { makeNearest, makePointsField, pointInPoly } from './nearest';
 import { PRESETS } from './presets';
 
 let fails = 0;
@@ -37,4 +37,13 @@ for (const k of ['T', 'U', 'irregular']) { const s = run(k, PRESETS[k]); if (s.t
 console.log(fails ? 'FAIL' : 'nearest checks passed');
 expect(fails).toBe(0);
 });
+});
+
+describe('makePointsField', () => {
+  it('owner is the closest vertex; outside gives null', () => {
+    const f = makePointsField([[0, 0], [10, 0], [10, 6], [0, 6]]);
+    expect(f.query(1, 1)).toEqual({ site: 0, d: Math.hypot(1, 1) });
+    expect(f.query(9, 5)!.site).toBe(2);
+    expect(f.query(-1, 1)).toBeNull();
+  });
 });

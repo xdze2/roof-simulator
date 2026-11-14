@@ -1,9 +1,9 @@
 import type { Vec2 } from '../geometry/skeleton';
-import { makeNearest } from '../geometry/nearest';
+import { fieldFor } from '../geometry/nearest';
 import { pickTarget } from '../geometry/hit';
 import type { Hit } from '../geometry/hit';
-import { isolines } from '../geometry/isolines';
-import { $, globalAlpha } from '../dom';
+import { isolines, levelLine } from '../geometry/isolines';
+import { $, globalAlpha, cutFraction, showsArcs } from '../dom';
 import { state, GRID_STEP, ISO_STEP } from '../state';
 import { color, rgb } from './colors';
 
@@ -28,11 +28,12 @@ function updateLegend(iso: boolean, mode: string): void {
   const { sk, closed, ov } = state;
   const items: [string, number, string, string][] = [['#111', 2, 'solid', 'wall / outline']];
   if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', 'gable (speed 0)']);
-  if (sk && closed && mode !== 'nearest') {
+  if (sk && closed && showsArcs(mode)) {
     if (iso) items.push(['#d32f2f', 2, 'solid', 'ridge / hip / valley']);
     else items.push(['#c4501b', 2, 'solid', 'hip / ridge'], ['#1b6fc4', 2, 'solid', 'valley']);
   }
   if (sk && closed && iso) items.push(['#bdbdbd', 1, 'solid', 'isolines (every ' + ISO_STEP + ' m)']);
+  if (sk && closed && cutFraction() !== null) items.push(['#d00000', 3, 'solid', 'level line']);
   const key = JSON.stringify(items);
   if (key === legendKey) return;
   legendKey = key;
@@ -61,13 +62,13 @@ export function draw2d(): void {
       ctx.closePath(); ctx.fillStyle = color(i); ctx.fill();
     });
     ctx.lineWidth = 2;
-    if (mode !== 'nearest') for (const a of sk.arcs) {
+    if (showsArcs(mode)) for (const a of sk.arcs) {
       const p = toScr([sk.nodes[a.a].x, sk.nodes[a.a].y]), q = toScr([sk.nodes[a.b].x, sk.nodes[a.b].y]);
       ctx.strokeStyle = iso ? '#d32f2f' : mode === 'overlay' ? (a.reflex ? '#0a2a66' : '#111') : a.reflex ? '#1b6fc4' : '#c4501b';
       ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
     }
     ctx.fillStyle = '#333';
-    if (mode !== 'nearest' && !iso) for (const nd of sk.nodes) { if (nd.t < 1e-9) continue; const s = toScr([nd.x, nd.y]); ctx.beginPath(); ctx.arc(s[0], s[1], 2.5, 0, 7); ctx.fill(); }
+    if (showsArcs(mode) && !iso) for (const nd of sk.nodes) { if (nd.t < 1e-9) continue; const s = toScr([nd.x, nd.y]); ctx.beginPath(); ctx.arc(s[0], s[1], 2.5, 0, 7); ctx.fill(); }
   }
   // footprint
   const bad = !!state.invalid, ink = bad ? '#d32f2f' : '#111';
@@ -81,7 +82,9 @@ export function draw2d(): void {
     if (closed) ctx.closePath();
     else if (mouse) { const s = toScr(mouse); ctx.lineTo(s[0], s[1]); }
     ctx.stroke();
+    if (sk && closed && showsArcs(mode)) drawLevelLine(sk);
     if (closed) decorateEdges();
+    drawHighlight();
     drawHover(); drawSelVertex();
     pts.forEach((p, k) => {
       const s = toScr(p); ctx.beginPath(); ctx.arc(s[0], s[1], k === 0 && !closed ? 6 : 4, 0, 7);
@@ -118,7 +121,9 @@ function drawNearest2d(): void {
   const w = Math.ceil(VIEW.w / CELL), h = Math.ceil(VIEW.h / CELL);
   off.width = w; off.height = h;
   const o = off.getContext('2d')!, img = o.createImageData(w, h), d = img.data;
-  const nn = makeNearest(sk.poly), n = sk.poly.length;
+  const nn = fieldFor($<HTMLSelectElement>('mode').value, sk.poly), n = sk.poly.length;
+  // level line in field modes: height = distance * tan(slope), so the line is where d = h / tan(slope)
+  const cf = cutFraction(), L = cf === null ? null : cf * sk.maxT / Math.tan(globalAlpha() * Math.PI / 180), tol = 0.6 * CELL / VIEW.s;
   const cols = sk.poly.map((_, i) => rgb(i));
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     const wp = toWorld((i + 0.5) * CELL, (j + 0.5) * CELL);
@@ -127,6 +132,7 @@ function drawNearest2d(): void {
     let c: number[];
     if (q.site < n) c = cols[q.site];
     else c = (((i + j) >> 1) & 1) ? [200, 200, 200] : [150, 150, 150]; // reflex vertex: grey hatching
+    if (L !== null && Math.abs(q.d - L) < tol) c = [208, 0, 0];
     const k = (j * w + i) * 4; d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2]; d[k + 3] = 255;
   }
   o.putImageData(img, 0, 0);
@@ -168,3 +174,33 @@ function drawIsolines(sk: NonNullable<typeof state.sk>): void {
 
 export const evPos = (e: MouseEvent): Vec2 => { const r = c2.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
 export const snap = (w: Vec2): Vec2 => (w[0] = Math.round(w[0] * 2) / 2, w[1] = Math.round(w[1] * 2) / 2, w);
+
+/** level line (skeleton mode): red with a white halo so it reads over the face colours */
+function drawLevelLine(sk: NonNullable<typeof state.sk>): void {
+  const cf = cutFraction();
+  if (cf === null) return;
+  const segs = levelLine(sk, cf * sk.maxT);
+  ctx.lineCap = 'round';
+  for (const [col, lw] of [['rgba(255,255,255,.9)', 6], ['#d00000', 3]] as const) {
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath();
+    for (const [p, q] of segs) { const a = toScr(p), b = toScr(q); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+    ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+}
+
+/** guided-tour emphasis: amber band on edges, red ring on vertices */
+function drawHighlight(): void {
+  const { highlight: hl, pts } = state, n = pts.length;
+  if (!hl) return;
+  ctx.strokeStyle = 'rgba(255,170,0,.6)'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  for (const i of hl.edges ?? []) {
+    if (i >= n) continue;
+    const a = toScr(pts[i]), b = toScr(pts[(i + 1) % n]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+  }
+  ctx.lineCap = 'butt'; ctx.strokeStyle = '#e33'; ctx.lineWidth = 3;
+  for (const i of hl.vertices ?? []) {
+    if (i >= n) continue;
+    const a = toScr(pts[i]); ctx.beginPath(); ctx.arc(a[0], a[1], 12, 0, 7); ctx.stroke();
+  }
+}

@@ -39,3 +39,14 @@ export function isolines(sk: Skeleton, step: number): IsoSegment[] {
   }
   return out;
 }
+
+/** level line at one height h (0 < h < maxT): one segment per non-gable face crossing t = h */
+export function levelLine(sk: Skeleton, h: number): [Vec2, Vec2][] {
+  const out: [Vec2, Vec2][] = [];
+  sk.faces.forEach((f, i) => {
+    if (f.length < 3 || sk.edges[i].w === 0) return;
+    const s = faceLevelSegment(f, h);
+    if (s) out.push(s);
+  });
+  return out;
+}

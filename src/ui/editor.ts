@@ -1,11 +1,12 @@
 // Footprint editing: pointer/keyboard handling on the 2D canvas, preset loading, skeleton recompute.
 import { straightSkeleton, polyArea } from '../geometry/skeleton';
-import type { Vec2 } from '../geometry/skeleton';
+import type { Vec2, Polygon } from '../geometry/skeleton';
 import { insertVertex, deleteVertex, projectOnSegment, MIN_POINTS } from '../geometry/edit';
 import { polygonProblem } from '../geometry/validity';
 import { PRESETS, GABLES } from '../geometry/presets';
 import { $, globalAlpha } from '../dom';
 import { state } from '../state';
+import type { EdgeOverride } from '../state';
 import { c2, draw2d, pickAt, evPos, snap, toWorld } from '../render/view2d';
 import { build3d } from '../render/view3d';
 import { syncBox } from './edgeBox';
@@ -43,7 +44,7 @@ export function toggleGable(i: number): void {
 export function addPointToEdge(i: number, p?: Vec2): void {
   const { pts } = state, a = pts[i], b = pts[(i + 1) % pts.length];
   const r = insertVertex(pts, state.ov, i, p ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
-  state.pts = r.pts; state.ov = r.ov; state.sel = i; state.selVertex = -1; state.hover = null;
+  state.pts = r.pts; state.ov = r.ov; state.sel = i; state.selVertex = -1; state.hover = null; state.highlight = null;
   syncBox(); recompute(false);
 }
 
@@ -51,18 +52,25 @@ export function addPointToEdge(i: number, p?: Vec2): void {
 export function deletePoint(v: number): void {
   const r = deleteVertex(state.pts, state.ov, v);
   if (!r) { const m = $('msg'); m.textContent = `A polygon needs at least ${MIN_POINTS} points`; m.hidden = false; return; }
-  state.pts = r.pts; state.ov = r.ov; state.sel = -1; state.selVertex = -1; state.hover = null;
+  state.pts = r.pts; state.ov = r.ov; state.sel = -1; state.selVertex = -1; state.hover = null; state.highlight = null;
   syncBox(); recompute(false);
 }
 
+/** replace the footprint by a closed polygon (copied) with per-edge overrides */
+export function loadShape(pts: Polygon, ov: (EdgeOverride | undefined)[] = []): void {
+  state.pts = pts.map((p): Vec2 => [p[0], p[1]]); state.closed = true; state.sel = -1; state.selVertex = -1;
+  state.hover = null; state.highlight = null; state.ov = ov.slice();
+  if (polyArea(state.pts) < 0) { state.pts.reverse(); state.ov = []; }   // keep edge indices aligned with the CCW skeleton polygon
+  syncBox(); recompute(true);
+}
+
 export function loadPreset(name: string): void {
-  state.pts = PRESETS[name].map((p): Vec2 => [p[0], p[1]]); state.closed = true; state.sel = -1; state.selVertex = -1;
-  state.ov = []; for (const i of GABLES[name] || []) state.ov[i] = { gable: true };
-  recompute(true);
+  const ov: EdgeOverride[] = []; for (const i of GABLES[name] || []) ov[i] = { gable: true };
+  loadShape(PRESETS[name], ov);
 }
 
 export function clearAll(): void {
-  state.ov = []; state.sel = -1; state.selVertex = -1; syncBox(); state.pts = []; state.closed = false; state.sk = null;
+  state.ov = []; state.sel = -1; state.selVertex = -1; state.highlight = null; syncBox(); state.pts = []; state.closed = false; state.sk = null;
   state.hover = null; setProblem(null); c2.style.cursor = ''; build3d(true); draw2d();
 }
 

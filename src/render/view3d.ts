@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Skeleton } from '../geometry/skeleton';
-import { makeNearest } from '../geometry/nearest';
-import { $ } from '../dom';
+import { fieldFor } from '../geometry/nearest';
+import { $, cutFraction } from '../dom';
 import { state, WALL_H, GRID_STEP } from '../state';
+import type { CameraPreset } from '../state';
 import { colorHex } from './colors';
 
 const c3 = $<HTMLCanvasElement>('c3d');
@@ -32,6 +33,33 @@ ground.rotation.x = -Math.PI / 2; ground.position.set(SCENE_C.x, -0.01, SCENE_C.
 const grid = new THREE.GridHelper(100, 100 / GRID_STEP, 0xc8c8c8, 0xe2e2e2); grid.position.copy(SCENE_C); scene.add(grid);
 let group = new THREE.Group(); scene.add(group);
 camera.position.set(20, 42, 62); controls.target.set(20, 4, -20); controls.update();
+
+// translucent horizontal plane at the level-line height
+const cutPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0x2f7fe0, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false }));
+cutPlane.rotation.x = -Math.PI / 2; cutPlane.visible = false; scene.add(cutPlane);
+
+/** sync the cut plane and the "level" readout with the toolbar slider */
+export function updateCut(): void {
+  const sk = state.sk, cf = cutFraction();
+  $('cutV').textContent = sk && cf !== null ? (cf * sk.maxT).toFixed(2) + ' m' : '';
+  cutPlane.visible = !!sk && cf !== null;
+  if (!sk || cf === null) return;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of sk.poly) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
+  cutPlane.position.set((x0 + x1) / 2, WALL_H + cf * sk.maxT, -(y0 + y1) / 2);
+  cutPlane.scale.set(x1 - x0 + 8, y1 - y0 + 8, 1);
+}
+
+/** orbit the camera around the footprint centroid (see CameraPreset) */
+export function setCamera(c: CameraPreset): void {
+  const P = state.pts; if (!P.length) return;
+  let cx = 0, cy = 0; for (const p of P) { cx += p[0]; cy += p[1]; }
+  cx /= P.length; cy /= P.length;
+  const az = c.az * Math.PI / 180, el = c.el * Math.PI / 180, ty = c.ty ?? 4;
+  controls.target.set(cx, ty, -cy);
+  camera.position.set(cx + c.dist * Math.sin(az) * Math.cos(el), ty + c.dist * Math.sin(el), -cy + c.dist * Math.cos(az) * Math.cos(el));
+  controls.update();
+}
 
 const outlineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
 /** shadow-casting mesh; outline=true adds thin black outlines (EdgesGeometry skips coplanar triangle diagonals) */
@@ -79,7 +107,7 @@ function earClip(f: P2[]): [number, number, number][] { // f: CCW simple polygon
 
 // plan (x,y) -> three (x, z, -y)
 function buildField(sk: Skeleton, k: number): void {
-  const P = sk.poly, n = P.length, nn = makeNearest(P);
+  const P = sk.poly, n = P.length, nn = fieldFor($<HTMLSelectElement>('mode').value, P);
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const p of P) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
   const N = 200, h = Math.max(x1 - x0, y1 - y0) / N;
@@ -112,6 +140,7 @@ export function build3d(refit: boolean): void {
   scene.remove(group);
   group.traverse((o) => { const m = o as THREE.Mesh; if (m.geometry) m.geometry.dispose(); });
   group = new THREE.Group(); scene.add(group);
+  updateCut();
   if (!sk) return;
   const k = Math.tan(+$<HTMLInputElement>('slope').value * Math.PI / 180);
   if ($<HTMLSelectElement>('mode').value !== 'skel') buildField(sk, k);

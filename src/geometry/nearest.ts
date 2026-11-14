@@ -49,3 +49,22 @@ export function makeNearest(P: Polygon): Nearest {
   }
   return { query, reflex, n };
 }
+
+/** Voronoi diagram of the polygon VERTICES only (point sites, ids 0..n-1), clipped to the polygon.
+ *  Same interface as makeNearest: query(x, y) -> {site, d} or null outside. */
+export function makePointsField(P: Polygon): Nearest {
+  const n = P.length;
+  function query(x: number, y: number): NearestHit | null {
+    if (!pointInPoly(P, x, y)) return null;
+    let best = Infinity, site = -1;
+    for (let i = 0; i < n; i++) {
+      const d = Math.hypot(x - P[i][0], y - P[i][1]);
+      if (d < best) { best = d; site = i; }
+    }
+    return { site, d: best };
+  }
+  return { query, reflex: [], n };
+}
+
+/** distance field used by the non-skeleton display modes */
+export const fieldFor = (mode: string, P: Polygon): Nearest => (mode === 'points' ? makePointsField(P) : makeNearest(P));

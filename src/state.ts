@@ -8,6 +8,12 @@ export const ISO_STEP = 0.25; // isoline spacing (m of roof height)
 /** per-edge override: undefined (global slope) | {gable:true} | {alpha:deg} */
 export interface EdgeOverride { gable?: boolean; alpha?: number }
 
+/** 3D orbit camera around the footprint centroid: azimuth / elevation in degrees, distance in m, ty = target height (default 4) */
+export interface CameraPreset { az: number; el: number; dist: number; ty?: number }
+
+/** edges / vertices emphasised by a guided-tour step */
+export interface Highlight { edges?: number[]; vertices?: number[] }
+
 export interface AppState {
   pts: Polygon;                          // polygon vertices [x,y] (plan metres, y up)
   closed: boolean;
@@ -20,6 +26,7 @@ export interface AppState {
   ov: (EdgeOverride | undefined)[];
   sel: number;                           // selected edge
   selVertex: number;                     // selected vertex (-1 none); exclusive with sel
+  highlight: Highlight | null;           // guided-tour emphasis in the 2D plan (cleared when the polygon changes)
 }
 
-export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1, selVertex: -1 };
+export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1, selVertex: -1, highlight: null };

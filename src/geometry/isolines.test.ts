@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isolines, faceLevelSegment } from './isolines';
+import { isolines, faceLevelSegment, levelLine } from './isolines';
 import { straightSkeleton } from './skeleton';
 import { PRESETS } from './presets';
 
@@ -32,5 +32,11 @@ describe('isolines', () => {
     const sk = straightSkeleton([[0, 0], [10, 0], [10, 6], [0, 6]], [1, 0, 1, 0]);
     expect(isolines(sk, 0)).toEqual([]);
     expect(isolines(sk, 1).length).toBeGreaterThan(0);
+  });
+  it('levelLine: one level of the rectangle is its inset; nothing above the ridge', () => {
+    const sk = straightSkeleton([[0, 0], [20, 0], [20, 10], [0, 10]]);
+    const total = levelLine(sk, 2).reduce((a, [p, q]) => a + Math.hypot(p[0] - q[0], p[1] - q[1]), 0);
+    expect(total).toBeCloseTo(2 * (16 + 6));
+    expect(levelLine(sk, 6)).toEqual([]);
   });
 });

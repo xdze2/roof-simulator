@@ -8,6 +8,7 @@
 <body>
 <header>
   <h1>Roof Simulator</h1>
+  <button id="tourToggle" title="show / hide the guided tour (PageUp / PageDown: previous / next step)">Tour</button>
   <button id="clear">Clear</button>
   <span>Presets:</span>
   <button data-preset="rectangle">Rectangle</button>
@@ -24,12 +25,16 @@
     <option value="skel">Straight skeleton</option>
     <option value="nearest">Nearest segment (Voronoi / medial axis)</option>
     <option value="overlay">Overlay (nearest + skeleton arcs)</option>
+    <option value="points">Nearest vertex (Voronoi of points)</option>
   </select></label>
   <label><input id="iso" type="checkbox"> isolines</label>
+  <label id="cutBox" title="level line and horizontal cut plane, as a fraction of the ridge height"><input id="cutOn" type="checkbox"> level <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
   <span id="note" style="color:#7a5200"></span>
   <button id="about">About</button>
   <span id="msg" role="alert" hidden></span>
 </header>
+<div id="main">
+<aside id="tour" aria-label="Visite guidée"></aside>
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>
     <div id="edgeBox" hidden>
@@ -45,6 +50,7 @@
     <div id="bl"><div id="legend"></div>
     <div class="hint">click to add points; click the first point, double-click or Enter to close; drag points or edges to edit; double-click an edge to add a point; select a point + Delete (or right-click it) to remove it.</div></div></div>
   <div class="pane"><canvas id="c3d"></canvas></div>
+</div>
 </div>
 <div id="modal" hidden><div class="box" role="dialog" aria-label="About">
   <button class="x" id="modalX" aria-label="Close">&times;</button>

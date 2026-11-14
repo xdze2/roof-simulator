@@ -9,31 +9,31 @@
 <header>
   <div id="brand"><h1 data-i18n="site.title">Roof Simulator</h1>
     <p id="desc" data-i18n="site.desc"></p></div>
-  <div id="bar">
-  <div id="tools">
-    <fieldset class="grp"><legend data-i18n="group.roof">Roof</legend>
-      <label><span data-i18n="mode.label">Method</span> <select id="mode">
-        <option value="skel" data-i18n="mode.skel"></option>
-        <option value="nearest" data-i18n="mode.nearest"></option>
-        <option value="overlay" data-i18n="mode.overlay"></option>
-        <option value="points" data-i18n="mode.points"></option>
-      </select></label>
-      <label><span data-i18n="slope.label">Slope</span> <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
-    </fieldset>
-    <fieldset class="grp"><legend data-i18n="group.view">View</legend>
-      <label><input id="iso" type="checkbox"> <span data-i18n="iso.label">isolines</span></label>
-      <label id="cutBox" data-i18n-title="cut.title"><input id="cutOn" type="checkbox"> <span data-i18n="cut.label">level</span> <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
-    </fieldset>
-    <span id="note"></span>
-    <span id="msg" role="alert" hidden></span>
-  </div>
-  <div id="right">
-    <div id="langSel" role="group" data-i18n-aria="lang.label"><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
-    <button id="about" data-i18n="btn.about">About</button>
-  </div>
-  </div>
+<div id="right">
+  <div id="langSel" role="group" data-i18n-aria="lang.label"><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
+  <button id="about" data-i18n="btn.about">About</button>
+</div>
 </header>
 <div id="main">
+  <div id="bar">
+<div id="tools">
+  <fieldset class="grp"><legend data-i18n="group.roof">Roof</legend>
+    <label><span data-i18n="mode.label">Method</span> <select id="mode">
+      <option value="skel" data-i18n="mode.skel"></option>
+      <option value="nearest" data-i18n="mode.nearest"></option>
+      <option value="overlay" data-i18n="mode.overlay"></option>
+      <option value="points" data-i18n="mode.points"></option>
+    </select></label>
+    <label><span data-i18n="slope.label">Slope</span> <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
+  </fieldset>
+  <fieldset class="grp"><legend data-i18n="group.view">View</legend>
+    <label><input id="iso" type="checkbox"> <span data-i18n="iso.label">isolines</span></label>
+    <label id="cutBox" data-i18n-title="cut.title"><input id="cutOn" type="checkbox"> <span data-i18n="cut.label">level</span> <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
+  </fieldset>
+  <span id="note"></span>
+  <span id="msg" role="alert" hidden></span>
+</div>
+</div>
 <div id="tourCol">
   <button id="tourToggle" hidden data-i18n="btn.tour" data-i18n-title="btn.tour.title">Guided tour</button>
   <aside id="tour" data-i18n-aria="tour.aria"></aside>
@@ -41,6 +41,7 @@
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>
   <span class="cap" id="cap2d" data-i18n="cap.2d"></span>
+  <div id="box2d">
   <div id="drawBar" role="toolbar" data-i18n-aria="group.drawing">
     <button id="clear" data-i18n="btn.clear" data-i18n-title="btn.clear.title">Clear</button>
     <select id="preset" data-i18n-aria="preset.label">
@@ -65,6 +66,7 @@
       <div class="erow"><button id="eAdd" data-i18n="edge.add" data-i18n-title="edge.add.title">Add point</button></div>
       <div class="small" data-i18n="edge.help"></div></div>
     <div id="vertBox" hidden><span data-i18n="vert.title">Point</span> <b id="vN"></b> <button id="vDel" data-i18n="vert.delete" data-i18n-title="vert.delete.title">Delete point</button></div>
+  </div>
     <div id="bl"><div id="legend"></div>
     <div class="hint" data-i18n="hint"></div></div></div>
   <div class="pane"><canvas id="c3d"></canvas><span class="cap" data-i18n="cap.3d"></span></div>

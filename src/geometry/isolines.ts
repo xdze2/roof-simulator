@@ -55,18 +55,24 @@ export function levelLine(sk: Skeleton, h: number): [Vec2, Vec2][] {
  *  samples outside the polygon (cells touching one are skipped). Segments at each level in `levels`. */
 export function gridIsolines(v: ArrayLike<number>, valid: ArrayLike<number>, nx: number, ny: number, x0: number, y0: number, h: number, levels: number[]): IsoSegment[] {
   const out: IsoSegment[] = [], W = nx + 1;
-  for (const L of levels) {
-    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-      const a = j * W + i;
-      const idx = [a, a + 1, a + W + 1, a + W];            // corners CCW: (i,j) (i+1,j) (i+1,j+1) (i,j+1)
-      if (idx.some((k) => !valid[k])) continue;
-      const cx = [i, i + 1, i + 1, i], cy = [j, j, j + 1, j + 1];
+  const idx = [0, 0, 0, 0], cx = [0, 1, 1, 0], cy = [0, 0, 1, 1];   // corners CCW: (i,j) (i+1,j) (i+1,j+1) (i,j+1)
+  const val = [0, 0, 0, 0];
+  const MAX_SEGS = 500000;   // hard cap on output size
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    if (out.length > MAX_SEGS) return out;
+    const a = j * W + i;
+    if (!valid[a] || !valid[a + 1] || !valid[a + W + 1] || !valid[a + W]) continue;
+    idx[0] = a; idx[1] = a + 1; idx[2] = a + W + 1; idx[3] = a + W;
+    let lo = Infinity, hi = -Infinity;
+    for (let e = 0; e < 4; e++) { const q = v[idx[e]]; val[e] = q; if (q < lo) lo = q; if (q > hi) hi = q; }
+    for (const L of levels) {
+      if (L < lo || L > hi) continue;                      // level does not cross this cell
       const pts: Vec2[] = [];
       for (let e = 0; e < 4; e++) {
-        const p = e, q = (e + 1) % 4, vp = v[idx[p]] - L, vq = v[idx[q]] - L;
+        const q = (e + 1) % 4, vp = val[e] - L, vq = val[q] - L;
         if ((vp < 0) !== (vq < 0)) {
           const u = vp / (vp - vq);
-          pts.push([x0 + (cx[p] + u * (cx[q] - cx[p])) * h, y0 + (cy[p] + u * (cy[q] - cy[p])) * h]);
+          pts.push([x0 + (i + cx[e] + u * (cx[q] - cx[e])) * h, y0 + (j + cy[e] + u * (cy[q] - cy[e])) * h]);
         }
       }
       if (pts.length === 2) out.push({ h: L, a: pts[0], b: pts[1] });

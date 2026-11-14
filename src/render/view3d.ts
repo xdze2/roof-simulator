@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Skeleton } from '../geometry/skeleton';
-import { fieldFor } from '../geometry/nearest';
+import { sampleField, fieldContours } from '../geometry/field';
 import { $, cutFraction } from '../dom';
-import { isolines, gridIsolines } from '../geometry/isolines';
+import { isolines } from '../geometry/isolines';
 import type { IsoSegment } from '../geometry/isolines';
 import { state, WALL_H, GRID_STEP, ISO_STEP } from '../state';
 import type { CameraPreset } from '../state';
@@ -109,16 +109,8 @@ function earClip(f: P2[]): [number, number, number][] { // f: CCW simple polygon
 
 // plan (x,y) -> three (x, z, -y)
 function buildField(sk: Skeleton, k: number): IsoSegment[] {
-  const P = sk.poly, n = P.length, nn = fieldFor($<HTMLSelectElement>('mode').value, P);
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const p of P) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); }
-  const N = 200, h = Math.max(x1 - x0, y1 - y0) / N;
-  const nx = Math.ceil((x1 - x0) / h) + 1, ny = Math.ceil((y1 - y0) / h) + 1;
-  const H = new Float32Array((nx + 1) * (ny + 1)), S = new Int32Array((nx + 1) * (ny + 1)).fill(-1);
-  for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
-    const q = nn.query(x0 + i * h, y0 + j * h);
-    if (q) { H[j * (nx + 1) + i] = q.d; S[j * (nx + 1) + i] = q.site; }
-  }
+  const P = sk.poly, n = P.length;
+  const { nx, ny, x0, y0, h, H, S } = sampleField(P, $<HTMLSelectElement>('mode').value);
   const cols = P.map((_, i) => colorHex(i)), grey = new THREE.Color(0x9a9a9a);
   const pos: number[] = [], col: number[] = [];
   const V = (i: number, j: number) => { const q = H[j * (nx + 1) + i]; pos.push(x0 + i * h, WALL_H + q * k, -(y0 + j * h)); };
@@ -135,12 +127,8 @@ function buildField(sk: Skeleton, k: number): IsoSegment[] {
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.computeVertexNormals();
   group.add(solid(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), false));
-  // contours of the same field: heights are multiples of ISO_STEP (height = d * k)
-  let dmax = 0; for (let a = 0; a < H.length; a++) if (S[a] >= 0 && H[a] > dmax) dmax = H[a];
-  const levels: number[] = [];
-  for (let m = 1; m * ISO_STEP < dmax * k - 1e-9 && m <= 500; m++) levels.push(m * ISO_STEP / k);
-  const ok = S.map((q) => (q >= 0 ? 1 : 0));
-  return gridIsolines(H, ok, nx, ny, x0, y0, h, levels).map((sg) => ({ ...sg, h: sg.h * k }));
+  // contours of the same field as the 2D plan (heights are multiples of ISO_STEP)
+  return fieldContours(sampleField(P, $<HTMLSelectElement>('mode').value), k, ISO_STEP);
 }
 
 const isoMat = new THREE.LineBasicMaterial({ color: 0x555555 }); // depth-tested: hidden behind the roof
@@ -151,7 +139,12 @@ function isoOn(): boolean { return $<HTMLInputElement>('iso').checked; }
 export function build3d(refit: boolean): void {
   const sk = state.sk;
   scene.remove(group);
-  group.traverse((o) => { const m = o as THREE.Mesh; if (m.geometry) m.geometry.dispose(); });
+  group.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.geometry) m.geometry.dispose();
+    const mat = m.material as THREE.Material | undefined;
+    if (mat && mat !== outlineMat && mat !== isoMat) mat.dispose();   // shared materials are kept
+  });
   group = new THREE.Group(); scene.add(group);
   updateCut();
   if (!sk) return;

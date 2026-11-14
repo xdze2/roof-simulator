@@ -4,6 +4,7 @@ import { fieldFor } from '../geometry/nearest';
 import { pickTarget } from '../geometry/hit';
 import type { Hit } from '../geometry/hit';
 import { isolines, levelLine } from '../geometry/isolines';
+import { fieldIsolines } from '../geometry/field';
 import { $, globalAlpha, cutFraction, showsArcs } from '../dom';
 import { state, GRID_STEP, ISO_STEP } from '../state';
 import { color, rgb } from './colors';
@@ -15,7 +16,10 @@ export const VIEW = { w: 1, h: 1, s: 10, ox: 0, oy: 0 };
 /** the floating tour column covers the left of the plan canvas (wide layout): the plan is fitted to what is left */
 function coveredLeft(): number {
   const col = $('tourCol'), main = $('main');
-  if (getComputedStyle(col).position !== 'absolute') { main.style.removeProperty('--inset'); return 0; }
+  if (getComputedStyle(col).position !== 'absolute') { main.style.removeProperty('--inset'); main.style.removeProperty('--top'); return 0; }
+  // the floating toolbar card covers the top of both panes (--top: its bottom edge + gap)
+  const bar = $('bar');
+  main.style.setProperty('--top', Math.ceil(bar.getBoundingClientRect().bottom - main.getBoundingClientRect().top) + 8 + 'px');
   const card = [...col.children].find((e) => !(e as HTMLElement).hidden) as HTMLElement | undefined;
   const inset = card ? Math.ceil(card.getBoundingClientRect().right - main.getBoundingClientRect().left) + 8 : 0;
   main.style.setProperty('--inset', inset + 'px');   // overlays and pane widths follow
@@ -26,9 +30,10 @@ export function resize2d(): void {
   const r = c2.getBoundingClientRect(), dpr = devicePixelRatio || 1;
   c2.width = Math.round(r.width * dpr); c2.height = Math.round(r.height * dpr);
   VIEW.w = r.width; VIEW.h = r.height;
-  const aw = Math.max(r.width - inset, 120);
-  VIEW.s = Math.min(aw, r.height) / 42;
-  VIEW.ox = inset + aw / 2 - 20 * VIEW.s; VIEW.oy = r.height / 2 + 19 * VIEW.s;
+  const top = parseFloat($('main').style.getPropertyValue('--top')) || 0;
+  const aw = Math.max(r.width - inset, 120), ah = Math.max(r.height - top, 120);
+  VIEW.s = Math.min(aw, ah) / 42;
+  VIEW.ox = inset + aw / 2 - 20 * VIEW.s; VIEW.oy = top + ah / 2 + 19 * VIEW.s;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   draw2d();
 }
@@ -181,7 +186,10 @@ function drawHover(): void {
 
 function drawIsolines(sk: NonNullable<typeof state.sk>): void {
   ctx.strokeStyle = '#bdbdbd'; ctx.lineWidth = 0.75; ctx.beginPath();
-  for (const s of isolines(sk, ISO_STEP)) { const a = toScr(s.a), b = toScr(s.b); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+  const mode = $<HTMLSelectElement>('mode').value;
+  // field modes: contours of the sampled distance field (same as the 3D view); height = distance * tan(slope)
+  const segs = mode === 'skel' ? isolines(sk, ISO_STEP) : fieldIsolines(sk.poly, mode, Math.tan(globalAlpha() * Math.PI / 180), ISO_STEP);
+  for (const s of segs) { const a = toScr(s.a), b = toScr(s.b); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
   ctx.stroke();
 }
 

@@ -34,14 +34,14 @@ export interface Tour {
 }
 
 export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
-  root.innerHTML = `<div class="tour-head"><b data-i18n="tour.title"></b> <span class="tour-count"></span>
-<button class="tour-x" data-i18n-aria="tour.close" data-i18n-title="tour.close">&times;</button></div>
+  root.innerHTML = `<div class="tour-head"><b data-i18n="tour.title"></b>
+<button class="tour-x" data-i18n="tour.hide" data-i18n-aria="tour.close" data-i18n-title="tour.close"></button></div>
 <ol class="tour-list"></ol>`;
   applyI18n(root);
   const q = <T extends HTMLElement>(sel: string): T => root.querySelector(sel) as T;
-  const list = q('.tour-list'), count = q('.tour-count'), closeBtn = q('.tour-x');
+  const list = q('.tour-list'), closeBtn = q('.tour-x');
   const toggle = $<HTMLButtonElement>('tourToggle');
-  let cur = -1;
+  let cur = -1, collapsed = false;   // collapsed: no step open (cur stays the last active one)
   const freeStep = steps.find((s) => s.free);
 
   /** in-step controls, bound to the toolbar ones */
@@ -69,19 +69,17 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
     list.replaceChildren();
     steps.forEach((s, i) => {
       const li = document.createElement('li'), b = document.createElement('button'), d = document.createElement('div');
-      b.className = 'tour-title'; b.textContent = s.title[lang]; b.setAttribute('aria-expanded', String(i === cur));
-      b.onclick = () => go(i);
+      b.className = 'tour-title'; b.textContent = s.title[lang]; b.setAttribute('aria-expanded', String(i === cur && !collapsed));
+      b.onclick = () => (i === cur && !collapsed ? collapse() : go(i));
       d.className = 'tour-step'; d.innerHTML = s.html[lang];
       const ctl = controlsFor(s); if (ctl) d.appendChild(ctl);
-      li.classList.toggle('on', i === cur); li.append(b, d); list.appendChild(li);
+      li.classList.toggle('on', i === cur && !collapsed); li.append(b, d); list.appendChild(li);
     });
     syncCut();
-    count.textContent = cur >= 0 ? t('tour.count', { i: cur + 1, n: steps.length }) : '';
   }
 
   function show(i: number, applied: boolean): void {
-    cur = i; const s = steps[i];
-    count.textContent = t('tour.count', { i: i + 1, n: steps.length });
+    cur = i; collapsed = false; const s = steps[i];
     [...list.children].forEach((li, k) => {
       li.classList.toggle('on', k === i);
       li.querySelector('.tour-title')!.setAttribute('aria-expanded', String(k === i));
@@ -89,6 +87,13 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
     syncCut();
     (list.children[i] as HTMLElement).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     if (!root.hidden) setUrl(s.id, applied);
+  }
+  /** clicking the open step again closes it: nothing is re-applied, the drawing stays */
+  function collapse(): void {
+    collapsed = true;
+    [...list.children].forEach((li) => {
+      li.classList.remove('on'); li.querySelector('.tour-title')!.setAttribute('aria-expanded', 'false');
+    });
   }
   function setUrl(id: string | null, applied = false): void {
     const u = new URL(location.href);

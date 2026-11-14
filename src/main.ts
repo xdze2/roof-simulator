@@ -20,6 +20,8 @@ initModal();
 
 addEventListener('resize', () => { resize2d(); resize3d(); });
 resize2d(); resize3d(); loop();
+// the toolbar card changes height (wrapping, language, messages): refit both views
+new ResizeObserver(() => { resize2d(); resize3d(); }).observe($('bar'));
 const tour = initTour($('tour'));
 window.__tour = tour;
 // ?step=<id> opens a tour step; ?preset= / ?mode= open the free mode with that drawing; nothing = step 1

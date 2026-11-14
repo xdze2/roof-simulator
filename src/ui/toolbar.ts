@@ -18,6 +18,7 @@ export function initToolbar(): void {
   slope.addEventListener('input', () => { $('slopeV').innerHTML = slope.value + '&deg;'; syncBox(); recompute(false); });
   $('walls').addEventListener('change', () => build3d(false));
   $('mode').addEventListener('change', () => { updNote(); draw2d(); build3d(false); });
+  $('iso').addEventListener('change', draw2d);
   updNote();
 }
 

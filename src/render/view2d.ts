@@ -1,7 +1,10 @@
 import type { Vec2 } from '../geometry/skeleton';
 import { makeNearest } from '../geometry/nearest';
+import { pickTarget } from '../geometry/hit';
+import type { Hit } from '../geometry/hit';
+import { isolines } from '../geometry/isolines';
 import { $, globalAlpha } from '../dom';
-import { state } from '../state';
+import { state, GRID_STEP, ISO_STEP } from '../state';
 import { color, rgb } from './colors';
 
 export const c2 = $<HTMLCanvasElement>('c2d');
@@ -25,15 +28,17 @@ export function draw2d(): void {
   ctx.clearRect(0, 0, VIEW.w, VIEW.h);
   // grid
   ctx.strokeStyle = '#e6e6df'; ctx.lineWidth = 1; ctx.beginPath();
-  for (let g = -10; g <= 50; g += 5) {
-    const a = toScr([g, -10]), b = toScr([g, 50]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
-    const c = toScr([-10, g]), d = toScr([50, g]); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
+  for (let g = -2 * GRID_STEP; g <= 10 * GRID_STEP; g += GRID_STEP) {
+    const a = toScr([g, -2 * GRID_STEP]), b = toScr([g, 10 * GRID_STEP]); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+    const c = toScr([-2 * GRID_STEP, g]), d = toScr([10 * GRID_STEP, g]); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
   }
   ctx.stroke();
   const mode = $<HTMLSelectElement>('mode').value;
-  if (sk && closed && mode !== 'skel') drawNearest2d();
+  const iso = $<HTMLInputElement>('iso').checked;
+  if (sk && closed && iso) drawIsolines(sk);   // contour lines replace the face colours
+  if (sk && closed && mode !== 'skel' && !iso) drawNearest2d();
   if (sk && closed) {
-    if (mode === 'skel') sk.faces.forEach((f, i) => {
+    if (mode === 'skel' && !iso) sk.faces.forEach((f, i) => {
       ctx.beginPath();
       f.forEach((p, k) => { const s = toScr([p.x, p.y]); k ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); });
       ctx.closePath(); ctx.fillStyle = color(i); ctx.fill();
@@ -41,23 +46,29 @@ export function draw2d(): void {
     ctx.lineWidth = 2;
     if (mode !== 'nearest') for (const a of sk.arcs) {
       const p = toScr([sk.nodes[a.a].x, sk.nodes[a.a].y]), q = toScr([sk.nodes[a.b].x, sk.nodes[a.b].y]);
-      ctx.strokeStyle = mode === 'overlay' ? (a.reflex ? '#0a2a66' : '#111') : a.reflex ? '#1b6fc4' : '#c4501b';
+      ctx.strokeStyle = iso ? '#d32f2f' : mode === 'overlay' ? (a.reflex ? '#0a2a66' : '#111') : a.reflex ? '#1b6fc4' : '#c4501b';
       ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
     }
     ctx.fillStyle = '#333';
-    if (mode !== 'nearest') for (const nd of sk.nodes) { if (nd.t < 1e-9) continue; const s = toScr([nd.x, nd.y]); ctx.beginPath(); ctx.arc(s[0], s[1], 2.5, 0, 7); ctx.fill(); }
+    if (mode !== 'nearest' && !iso) for (const nd of sk.nodes) { if (nd.t < 1e-9) continue; const s = toScr([nd.x, nd.y]); ctx.beginPath(); ctx.arc(s[0], s[1], 2.5, 0, 7); ctx.fill(); }
   }
   // footprint
+  const bad = !!state.invalid, ink = bad ? '#d32f2f' : '#111';
   if (pts.length) {
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath();
+    if (bad && closed) {
+      ctx.beginPath(); pts.forEach((p, k) => { const s = toScr(p); k ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); });
+      ctx.closePath(); ctx.fillStyle = 'rgba(211,47,47,.18)'; ctx.fill();
+    }
+    ctx.strokeStyle = ink; ctx.lineWidth = iso && !bad ? 1.5 : 2.5; ctx.beginPath();
     pts.forEach((p, k) => { const s = toScr(p); k ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); });
     if (closed) ctx.closePath();
     else if (mouse) { const s = toScr(mouse); ctx.lineTo(s[0], s[1]); }
     ctx.stroke();
     if (closed) decorateEdges();
+    drawHover();
     pts.forEach((p, k) => {
       const s = toScr(p); ctx.beginPath(); ctx.arc(s[0], s[1], k === 0 && !closed ? 6 : 4, 0, 7);
-      ctx.fillStyle = k === 0 && !closed ? '#e33' : '#111'; ctx.fill();
+      ctx.fillStyle = k === 0 && !closed ? '#e33' : ink; ctx.fill();
     });
   }
 }
@@ -70,7 +81,7 @@ function decorateEdges(): void {
     const a = toScr(pts[i]), b = toScr(pts[(i + 1) % n]), o = ov[i];
     const gable = o && o.gable;
     if (i === sel) { ctx.strokeStyle = 'rgba(230,40,40,.55)'; ctx.lineWidth = 9; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
-    if (gable) { ctx.strokeStyle = '#6b2d00'; ctx.lineWidth = 6; ctx.setLineDash([9, 5]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.setLineDash([]); }
+    if (gable) { ctx.strokeStyle = '#6b2d00'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.lineCap = 'butt'; }
     if (gable || (o && o.alpha !== g)) {
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const nx = (b[1] - a[1]) / len, ny = -(b[0] - a[0]) / len;   // inward side on screen (CCW world, y flipped)
@@ -106,13 +117,30 @@ function drawNearest2d(): void {
   ctx.drawImage(off, 0, 0, w * CELL, h * CELL);
 }
 
-export function pick(x: number, y: number, r = 9): number {
-  const { pts } = state;
-  for (let i = 0; i < pts.length; i++) {
-    const s = toScr(pts[i]);
-    if (Math.hypot(s[0] - x, s[1] - y) <= r) return i;
+export const PICK_R = 9;
+/** vertex (priority) or edge under the screen position */
+export const pickAt = (x: number, y: number): Hit => pickTarget(state.pts.map(toScr), [x, y], PICK_R, state.closed);
+
+function drawHover(): void {
+  const { hover, pts, drag, dragEdge } = state;
+  if (!hover || hover.index >= pts.length) return;
+  const active = drag >= 0 || !!dragEdge;
+  ctx.strokeStyle = active ? 'rgba(25,118,210,.75)' : 'rgba(25,118,210,.5)';
+  ctx.fillStyle = 'rgba(25,118,210,.25)';
+  if (hover.kind === 'vertex') {
+    const s = toScr(pts[hover.index]);
+    ctx.beginPath(); ctx.arc(s[0], s[1], 10, 0, 7); ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+  } else {
+    const a = toScr(pts[hover.index]), b = toScr(pts[(hover.index + 1) % pts.length]);
+    ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.lineCap = 'butt';
   }
-  return -1;
 }
+
+function drawIsolines(sk: NonNullable<typeof state.sk>): void {
+  ctx.strokeStyle = '#bdbdbd'; ctx.lineWidth = 0.75; ctx.beginPath();
+  for (const s of isolines(sk, ISO_STEP)) { const a = toScr(s.a), b = toScr(s.b); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+  ctx.stroke();
+}
+
 export const evPos = (e: MouseEvent): Vec2 => { const r = c2.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
 export const snap = (w: Vec2): Vec2 => (w[0] = Math.round(w[0] * 2) / 2, w[1] = Math.round(w[1] * 2) / 2, w);

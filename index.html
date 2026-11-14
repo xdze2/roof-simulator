@@ -25,9 +25,10 @@
     <option value="nearest">Nearest segment (Voronoi / medial axis)</option>
     <option value="overlay">Overlay (nearest + skeleton arcs)</option>
   </select></label>
+  <label><input id="iso" type="checkbox"> isolines</label>
   <span id="note" style="color:#7a5200"></span>
   <button id="about">About</button>
-  <span id="msg"></span>
+  <span id="msg" role="alert" hidden></span>
 </header>
 <div id="panes">
   <div class="pane"><canvas id="c2d"></canvas>

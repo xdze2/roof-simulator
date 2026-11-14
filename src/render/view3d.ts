@@ -3,22 +3,44 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Skeleton } from '../geometry/skeleton';
 import { makeNearest } from '../geometry/nearest';
 import { $ } from '../dom';
-import { state, WALL_H } from '../state';
+import { state, WALL_H, GRID_STEP } from '../state';
 import { colorHex } from './colors';
 
 const c3 = $<HTMLCanvasElement>('c3d');
 const renderer = new THREE.WebGLRenderer({ canvas: c3, antialias: true, preserveDrawingBuffer: true });
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0xdfe6ea);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
 const camera = new THREE.PerspectiveCamera(40, 1, 0.5, 500);
 const controls = new OrbitControls(camera, c3);
 controls.enableDamping = true;
-scene.add(new THREE.HemisphereLight(0xffffff, 0x778899, 0.55));
-const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(-30, 50, 25); scene.add(sun);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ color: 0xb8c4a8 }));
-ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; scene.add(ground);
-const grid = new THREE.GridHelper(200, 100, 0x8a9a7a, 0x9fae90); grid.position.y = 0; scene.add(grid);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 0.35));
+
+// fixed sun (directional, casts shadows) aimed at the middle of the plan area, which is ~0..40 m
+const SCENE_C = new THREE.Vector3(20, 0, -20);
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.copy(SCENE_C).add(new THREE.Vector3(15, 50, 40));
+sun.target.position.copy(SCENE_C);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -50, right: 50, top: 50, bottom: -50, near: 1, far: 200 });
+sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05;
+scene.add(sun, sun.target);
+
+// base plane: invisible except for the shadows, plus a minimal light grey grid
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ opacity: 0.22 }));
+ground.rotation.x = -Math.PI / 2; ground.position.set(SCENE_C.x, -0.01, SCENE_C.z); ground.receiveShadow = true; scene.add(ground);
+const grid = new THREE.GridHelper(100, 100 / GRID_STEP, 0xc8c8c8, 0xe2e2e2); grid.position.copy(SCENE_C); scene.add(grid);
 let group = new THREE.Group(); scene.add(group);
 camera.position.set(20, 42, 62); controls.target.set(20, 4, -20); controls.update();
+
+const outlineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+/** shadow-casting mesh; outline=true adds thin black outlines (EdgesGeometry skips coplanar triangle diagonals) */
+const solid = (g: THREE.BufferGeometry, m: THREE.Material, outline = true): THREE.Object3D => {
+  m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1; // keep outlines above the faces
+  const mesh = new THREE.Mesh(g, m); mesh.castShadow = true; mesh.receiveShadow = true;
+  if (!outline) return mesh;
+  const o = new THREE.Group(); o.add(mesh, new THREE.LineSegments(new THREE.EdgesGeometry(g, 20), outlineMat)); return o;
+};
 
 interface P2 { x: number; y: number }
 
@@ -82,7 +104,7 @@ function buildField(sk: Skeleton, k: number): void {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   g.computeVertexNormals();
-  group.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+  group.add(solid(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), false));
 }
 
 export function build3d(refit: boolean): void {
@@ -102,7 +124,7 @@ export function build3d(refit: boolean): void {
     for (const [a, b, c] of tri) for (const q of [a, b, c]) pos.push(f[q].x, WALL_H + f[q].t, -f[q].y);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
-    group.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: gable ? 0xe9e2d0 : colorHex(i), side: THREE.DoubleSide })));
+    group.add(solid(g, new THREE.MeshLambertMaterial({ color: gable ? 0xe9e2d0 : colorHex(i), side: THREE.DoubleSide })));
   });
   if ($<HTMLInputElement>('walls').checked) {
     const P = sk.poly, pos: number[] = [];
@@ -113,7 +135,7 @@ export function build3d(refit: boolean): void {
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
-    group.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: 0xe9e2d0, side: THREE.DoubleSide })));
+    group.add(solid(g, new THREE.MeshLambertMaterial({ color: 0xe9e2d0, side: THREE.DoubleSide })));
   }
   // footprint outline at eaves
   const lp = sk.poly.map((p) => new THREE.Vector3(p[0], WALL_H, -p[1]));

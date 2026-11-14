@@ -12,10 +12,9 @@ import { t, getLang, applyI18n, onLangChange } from '../i18n';
 
 /** set every view parameter of the step (defaults for the ones it leaves out), then its footprint */
 export function applyStep(s: Step): void {
-  setMode(s.mode ?? 'skel');
+  setMode(s.mode ?? 'skel', !!s.arcs);
   setSlope(s.slope ?? 40);
   $<HTMLInputElement>('iso').checked = !!s.iso;
-  state.noRoof = !!s.noRoof;
   const shape = stepShape(s);
   if (shape) loadShape(shape.pts, shape.ov);
   else { state.highlight = null; state.sel = -1; state.selVertex = -1; syncBox(); recompute(false); }

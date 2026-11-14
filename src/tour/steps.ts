@@ -10,7 +10,7 @@ import type { Lang } from '../i18n';
 export type L10n = Record<Lang, string>;
 export type StepControl = 'cut';   // a control rendered inside the open step, bound to the toolbar one
 
-export type Mode = 'skel' | 'nearest' | 'overlay' | 'points';
+export type Mode = 'none' | 'skel' | 'nearest' | 'points';
 
 export interface Step {
   id: string;                        // used in ?step=<id>
@@ -21,7 +21,8 @@ export interface Step {
   pts?: Polygon;                     // explicit footprint, takes precedence over preset
   gables?: number[];                 // gable edge indices (edge i = vertex i -> i+1); default: the preset's GABLES
   slopes?: Record<number, number>;   // per-edge slope in degrees, overriding the global slope
-  mode?: Mode;                       // default 'skel'
+  mode?: Mode;                       // default 'skel'; 'none' = walls only, the roof is not drawn yet
+  arcs?: boolean;                    // draw the skeleton arcs over a field method (nearest / points)
   slope?: number;                    // global slope in degrees, default 40
   iso?: boolean;                     // isolines, default off
   camera?: CameraPreset;             // default: the automatic fit
@@ -29,12 +30,11 @@ export interface Step {
   cutAnim?: boolean;                 // the level line rises from 0 to `cut`
   highlight?: Highlight;             // edges / vertices emphasised in the 2D plan
   free?: boolean;                    // keep the current drawing (free mode)
-  noRoof?: boolean;                  // walls only, the roof is not drawn yet
 }
 
 export const STEPS: Step[] = [
   {
-    id: 'question', preset: 'rectangle', noRoof: true,
+    id: 'question', preset: 'rectangle', mode: 'none',
     camera: { az: 35, el: 32, dist: 81, ty: 5 },
     title: { en: 'Where does the ridge go?', fr: 'Où passe le faîtage ?' },
     html: {
@@ -100,7 +100,7 @@ export const STEPS: Step[] = [
     },
   },
   {
-    id: 'onglet', preset: 'U', mode: 'overlay',
+    id: 'onglet', preset: 'U', mode: 'nearest', arcs: true,
     camera: { az: 30, el: 42, dist: 102, ty: 3 },
     title: { en: 'Flat faces: the straight skeleton', fr: 'Pans plans : le squelette droit' },
     html: {

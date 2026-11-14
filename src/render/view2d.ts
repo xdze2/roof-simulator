@@ -5,7 +5,7 @@ import { pickTarget } from '../geometry/hit';
 import type { Hit } from '../geometry/hit';
 import { isolines, levelLine } from '../geometry/isolines';
 import { fieldIsolines } from '../geometry/field';
-import { $, globalAlpha, cutFraction, showsArcs } from '../dom';
+import { $, globalAlpha, cutFraction, showsArcs, noRoof, isRidge } from '../dom';
 import { state, GRID_STEP, ISO_STEP } from '../state';
 import { color, rgb } from './colors';
 
@@ -40,15 +40,23 @@ export function resize2d(): void {
 export const toScr = (p: Vec2): Vec2 => [VIEW.ox + p[0] * VIEW.s, VIEW.oy - p[1] * VIEW.s];
 export const toWorld = (x: number, y: number): Vec2 => [(x - VIEW.ox) / VIEW.s, (VIEW.oy - y) / VIEW.s];
 
+/** ridges (horizontal arcs) are drawn wider than hips and valleys */
+const RIDGE_W = 4;
+/** [hip / ridge colour, valley colour] of the skeleton arcs */
+const arcColors = (mode: string, iso: boolean): [string, string] =>
+  iso ? ['#d32f2f', '#d32f2f'] : mode === 'skel' ? ['#c4501b', '#1b6fc4'] : ['#111', '#0a2a66'];
+
 let legendKey = '';
 onLangChange(() => { legendKey = ''; draw2d(); });
 function updateLegend(iso: boolean, mode: string): void {
-  const { closed, ov } = state, sk = state.noRoof ? null : state.sk;
+  const { closed, ov } = state, sk = noRoof() ? null : state.sk;
   const items: [string, number, string, string][] = [['#111', 2, 'solid', t('legend.outline')]];
   if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', t('legend.gable')]);
   if (sk && closed && showsArcs(mode)) {
-    if (iso) items.push(['#d32f2f', 2, 'solid', t('legend.ridgeAll')]);
-    else items.push(['#c4501b', 2, 'solid', t('legend.hipRidge')], ['#1b6fc4', 2, 'solid', t('legend.valley')]);
+    const [hip, valley] = arcColors(mode, iso);
+    items.push([hip, RIDGE_W, 'solid', t('legend.ridge')]);
+    if (hip === valley) items.push([hip, 2, 'solid', t('legend.hipValley')]);
+    else items.push([hip, 2, 'solid', t('legend.hip')], [valley, 2, 'solid', t('legend.valley')]);
   }
   if (sk && closed && iso) items.push(['#bdbdbd', 1, 'solid', t('legend.isolines', { step: ISO_STEP })]);
   if (sk && closed && cutFraction() !== null) items.push(['#d00000', 3, 'solid', t('legend.level')]);
@@ -59,7 +67,7 @@ function updateLegend(iso: boolean, mode: string): void {
 }
 
 export function draw2d(): void {
-  const { pts, closed, mouse } = state, sk = state.noRoof ? null : state.sk;
+  const { pts, closed, mouse } = state, sk = noRoof() ? null : state.sk;
   ctx.clearRect(0, 0, VIEW.w, VIEW.h);
   // grid
   ctx.strokeStyle = '#e6e6df'; ctx.lineWidth = 1; ctx.beginPath();
@@ -79,12 +87,15 @@ export function draw2d(): void {
       f.forEach((p, k) => { const s = toScr([p.x, p.y]); k ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); });
       ctx.closePath(); ctx.fillStyle = color(i); ctx.fill();
     });
-    ctx.lineWidth = 2;
+    const [hipC, valleyC] = arcColors(mode, iso);
+    ctx.lineCap = 'round';
     if (showsArcs(mode)) for (const a of sk.arcs) {
-      const p = toScr([sk.nodes[a.a].x, sk.nodes[a.a].y]), q = toScr([sk.nodes[a.b].x, sk.nodes[a.b].y]);
-      ctx.strokeStyle = iso ? '#d32f2f' : mode === 'overlay' ? (a.reflex ? '#0a2a66' : '#111') : a.reflex ? '#1b6fc4' : '#c4501b';
+      const na = sk.nodes[a.a], nb = sk.nodes[a.b], p = toScr([na.x, na.y]), q = toScr([nb.x, nb.y]);
+      ctx.strokeStyle = a.reflex ? valleyC : hipC;
+      ctx.lineWidth = !a.reflex && isRidge(na.t, nb.t, sk.maxT) ? RIDGE_W : 2;
       ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
     }
+    ctx.lineCap = 'butt';
     ctx.fillStyle = '#333';
     if (showsArcs(mode) && !iso) for (const nd of sk.nodes) { if (nd.t < 1e-9) continue; const s = toScr([nd.x, nd.y]); ctx.beginPath(); ctx.arc(s[0], s[1], 2.5, 0, 7); ctx.fill(); }
   }

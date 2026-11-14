@@ -1,5 +1,5 @@
 // Selected-edge box: hip/gable radios, per-edge slope slider, "global" toggle.
-import { $, globalAlpha } from '../dom';
+import { $, globalAlpha, getMode } from '../dom';
 import { state } from '../state';
 
 export function syncBox(): void {
@@ -17,6 +17,8 @@ export function syncBox(): void {
   eGlobal.checked = !gable && !own; eGlobal.disabled = gable;
   eSlope.value = String(alpha); eSlope.disabled = gable || !own;   // slider only active for a hip edge with its own slope
   $('eSlopeV').innerHTML = gable ? '&ndash;' : alpha + '&deg;';
+  // per-edge slopes only drive the (weighted) straight skeleton
+  box.querySelectorAll<HTMLElement>('.eslope').forEach((e) => { e.hidden = getMode() !== 'skel'; });
 }
 
 /** onChange: re-run the skeleton after an edge override changed */

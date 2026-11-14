@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Skeleton } from '../geometry/skeleton';
 import { sampleField, fieldContours } from '../geometry/field';
-import { $, cutFraction } from '../dom';
+import { $, cutFraction, noRoof } from '../dom';
 import { isolines } from '../geometry/isolines';
 import type { IsoSegment } from '../geometry/isolines';
 import { state, WALL_H, GRID_STEP, ISO_STEP } from '../state';
@@ -155,7 +155,7 @@ export function build3d(refit: boolean): void {
   const k = Math.tan(+$<HTMLInputElement>('slope').value * Math.PI / 180);
   const on = isoOn(); lastIso = on;
   let iso: IsoSegment[] = [];
-  if (state.noRoof) { /* walls only */ }
+  if (noRoof()) { /* walls only */ }
   else if ($<HTMLSelectElement>('mode').value !== 'skel') { const r = buildField(sk, k); if (on) iso = r; }
   else sk.faces.forEach((f, i) => {
     if (f.length < 3) return;
@@ -179,7 +179,7 @@ export function build3d(refit: boolean): void {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
     group.add(solid(g, new THREE.MeshLambertMaterial({ color: 0xe9e2d0, side: THREE.DoubleSide })));
   }
-  if (on && !state.noRoof) {
+  if (on && !noRoof()) {
     if ($<HTMLSelectElement>('mode').value === 'skel') iso = isolines(sk, ISO_STEP);
     const pos: number[] = [];
     for (const sg of iso) pos.push(sg.a[0], WALL_H + sg.h + ISO_LIFT, -sg.a[1], sg.b[0], WALL_H + sg.h + ISO_LIFT, -sg.b[1]);

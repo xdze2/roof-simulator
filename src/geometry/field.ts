@@ -1,4 +1,4 @@
-// Sampled distance field of the field modes ('nearest', 'overlay' -> nearest segment; 'points' -> nearest vertex)
+// Sampled distance field of the field modes ('nearest' -> nearest segment; 'points' -> nearest vertex)
 // and its contour lines. Shared by the 2D plan and the 3D view so both show the same isolines.
 // Height in field modes = distance * k (k = tan(slope)), so a contour every `step` m of height is a
 // distance contour every step / k m.

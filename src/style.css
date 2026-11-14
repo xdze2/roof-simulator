@@ -4,6 +4,7 @@
    palette closely enough to remap without a visible change, so the literal values stay. */
 :root { --bg:#f4f4f1; --fg:#222; --panel:#fff; --line:#cfcfc8; }
 * { box-sizing: border-box; }
+[hidden] { display:none !important; }
 body { margin:0; font:14px system-ui, sans-serif; background:var(--bg); color:var(--fg); height:100vh; display:flex; flex-direction:column; }
 header { padding:8px 12px; border-bottom:1px solid var(--line); background:var(--panel); display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; position:relative; z-index:5; box-shadow:0 2px 1px rgba(0,0,0,.12); }
 #brand { flex:1 1 auto; min-width:0; }
@@ -89,7 +90,7 @@ canvas { display:block; width:100%; height:100%; }
 #tour .tour-ctl input[type=range] { flex:1; min-width:0; }
 #tour .tour-cutv { min-width:4.5ch; font-variant-numeric:tabular-nums; text-align:right; }
 #cutBox input[type=range] { width:100px; }
-#mode { max-width:210px; }
+#mode { max-width:100%; }   /* sized to its longest option; labels are kept short */
 #cutV { display:inline-block; min-width:4.5ch; font-variant-numeric:tabular-nums; }
 @media (max-width:800px) {
   body { height:auto; min-height:100vh; }

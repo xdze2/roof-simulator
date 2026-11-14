@@ -19,14 +19,15 @@
 <div id="tools">
   <fieldset class="grp"><legend data-i18n="group.roof">Roof</legend>
     <label><span data-i18n="mode.label">Method</span> <select id="mode">
+      <option value="none" data-i18n="mode.none"></option>
       <option value="skel" data-i18n="mode.skel"></option>
       <option value="nearest" data-i18n="mode.nearest"></option>
-      <option value="overlay" data-i18n="mode.overlay"></option>
       <option value="points" data-i18n="mode.points"></option>
     </select></label>
-    <label><span data-i18n="slope.label">Slope</span> <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
+    <label id="slopeBox"><span data-i18n="slope.label">Slope</span> <input id="slope" type="range" min="15" max="60" value="40"> <b id="slopeV">40&deg;</b></label>
   </fieldset>
-  <fieldset class="grp"><legend data-i18n="group.view">View</legend>
+  <fieldset class="grp" id="viewGrp"><legend data-i18n="group.view">View</legend>
+    <label id="arcsBox" data-i18n-title="arcs.title"><input id="arcs" type="checkbox"> <span data-i18n="arcs.label">skeleton</span></label>
     <label><input id="iso" type="checkbox"> <span data-i18n="iso.label">isolines</span></label>
     <label id="cutBox" data-i18n-title="cut.title"><input id="cutOn" type="checkbox"> <span data-i18n="cut.label">level</span> <input id="cut" type="range" min="0" max="100" value="50"> <b id="cutV"></b></label>
   </fieldset>
@@ -58,9 +59,9 @@
     <div id="edgeBox" hidden>
       <div class="ehead"><span data-i18n="edge.title">Edge</span> <b id="eN"></b></div>
       <div class="erow"><label class="rad"><input type="radio" name="em" value="hip"> <span data-i18n="edge.hip">Hip</span></label>
-        <span class="sl"><span data-i18n="edge.slope">slope=</span><b id="eSlopeV"></b></span>
-        <input id="eSlope" type="range" min="15" max="75" value="40">
-        <label class="glob" data-i18n-title="edge.global.title"><input id="eGlobal" type="checkbox"> <span data-i18n="edge.global">global</span></label></div>
+        <span class="sl eslope"><span data-i18n="edge.slope">slope=</span><b id="eSlopeV"></b></span>
+        <input id="eSlope" class="eslope" type="range" min="15" max="75" value="40">
+        <label class="glob eslope" data-i18n-title="edge.global.title"><input id="eGlobal" type="checkbox"> <span data-i18n="edge.global">global</span></label></div>
       <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> <span data-i18n="edge.gable">Gable (speed=0)</span></label></div>
       <div class="erow"><button id="eAdd" data-i18n-title="edge.add.title"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span data-i18n="edge.add">Add point</span></button></div>
       <div class="small" data-i18n="edge.help"></div></div>

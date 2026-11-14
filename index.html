@@ -39,9 +39,11 @@
         <input id="eSlope" type="range" min="15" max="75" value="40">
         <label class="glob" title="on: this edge follows the global slope (toolbar); off: it has its own slope"><input id="eGlobal" type="checkbox"> global</label></div>
       <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> Gable (speed=0)</label></div>
+      <div class="erow"><button id="eAdd" title="insert a point at the middle of this edge (or double-click the edge)">Add point</button></div>
       <div class="small">click an edge to select it; shift-click or key G toggles gable</div></div>
-    <div id="legend"></div>
-    <div class="hint">click to add points; click the first point, double-click or Enter to close; drag points or edges to edit.</div></div>
+    <div id="vertBox" hidden>Point <b id="vN"></b> <button id="vDel" title="or press Delete / right-click the point">Delete point</button></div>
+    <div id="bl"><div id="legend"></div>
+    <div class="hint">click to add points; click the first point, double-click or Enter to close; drag points or edges to edit; double-click an edge to add a point; select a point + Delete (or right-click it) to remove it.</div></div></div>
   <div class="pane"><canvas id="c3d"></canvas></div>
 </div>
 <div id="modal" hidden><div class="box" role="dialog" aria-label="About">

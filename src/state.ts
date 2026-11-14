@@ -19,6 +19,7 @@ export interface AppState {
   invalid: string | null;                // geometry problem (shown in red) or null
   ov: (EdgeOverride | undefined)[];
   sel: number;                           // selected edge
+  selVertex: number;                     // selected vertex (-1 none); exclusive with sel
 }
 
-export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1 };
+export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1, selVertex: -1 };

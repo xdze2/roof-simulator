@@ -82,7 +82,7 @@ export function draw2d(): void {
     else if (mouse) { const s = toScr(mouse); ctx.lineTo(s[0], s[1]); }
     ctx.stroke();
     if (closed) decorateEdges();
-    drawHover();
+    drawHover(); drawSelVertex();
     pts.forEach((p, k) => {
       const s = toScr(p); ctx.beginPath(); ctx.arc(s[0], s[1], k === 0 && !closed ? 6 : 4, 0, 7);
       ctx.fillStyle = k === 0 && !closed ? '#e33' : ink; ctx.fill();
@@ -137,6 +137,13 @@ function drawNearest2d(): void {
 export const PICK_R = 9;
 /** vertex (priority) or edge under the screen position */
 export const pickAt = (x: number, y: number): Hit => pickTarget(state.pts.map(toScr), [x, y], PICK_R, state.closed);
+
+function drawSelVertex(): void {
+  const { selVertex, pts } = state;
+  if (selVertex < 0 || selVertex >= pts.length) return;
+  const s = toScr(pts[selVertex]);
+  ctx.beginPath(); ctx.arc(s[0], s[1], 8, 0, 7); ctx.strokeStyle = 'rgba(230,40,40,.8)'; ctx.lineWidth = 2.5; ctx.stroke();
+}
 
 function drawHover(): void {
   const { hover, pts, drag, dragEdge } = state;

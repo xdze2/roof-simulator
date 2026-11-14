@@ -1,6 +1,7 @@
 // Footprint editing: pointer/keyboard handling on the 2D canvas, preset loading, skeleton recompute.
 import { straightSkeleton, polyArea } from '../geometry/skeleton';
 import type { Vec2 } from '../geometry/skeleton';
+import { insertVertex, deleteVertex, projectOnSegment, MIN_POINTS } from '../geometry/edit';
 import { polygonProblem } from '../geometry/validity';
 import { PRESETS, GABLES } from '../geometry/presets';
 import { $, globalAlpha } from '../dom';
@@ -38,14 +39,30 @@ export function toggleGable(i: number): void {
   ov[i] = ov[i] && ov[i]!.gable ? undefined : { gable: true }; syncBox(); recompute(false);
 }
 
+/** insert a point into edge i (at p, default the edge midpoint); both halves keep the edge's settings */
+export function addPointToEdge(i: number, p?: Vec2): void {
+  const { pts } = state, a = pts[i], b = pts[(i + 1) % pts.length];
+  const r = insertVertex(pts, state.ov, i, p ?? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  state.pts = r.pts; state.ov = r.ov; state.sel = i; state.selVertex = -1; state.hover = null;
+  syncBox(); recompute(false);
+}
+
+/** delete vertex v; its two edges merge, keeping the previous edge's settings; at least 3 points stay */
+export function deletePoint(v: number): void {
+  const r = deleteVertex(state.pts, state.ov, v);
+  if (!r) { const m = $('msg'); m.textContent = `A polygon needs at least ${MIN_POINTS} points`; m.hidden = false; return; }
+  state.pts = r.pts; state.ov = r.ov; state.sel = -1; state.selVertex = -1; state.hover = null;
+  syncBox(); recompute(false);
+}
+
 export function loadPreset(name: string): void {
-  state.pts = PRESETS[name].map((p): Vec2 => [p[0], p[1]]); state.closed = true; state.sel = -1;
+  state.pts = PRESETS[name].map((p): Vec2 => [p[0], p[1]]); state.closed = true; state.sel = -1; state.selVertex = -1;
   state.ov = []; for (const i of GABLES[name] || []) state.ov[i] = { gable: true };
   recompute(true);
 }
 
 export function clearAll(): void {
-  state.ov = []; state.sel = -1; syncBox(); state.pts = []; state.closed = false; state.sk = null;
+  state.ov = []; state.sel = -1; state.selVertex = -1; syncBox(); state.pts = []; state.closed = false; state.sk = null;
   state.hover = null; setProblem(null); c2.style.cursor = ''; build3d(true); draw2d();
 }
 
@@ -53,7 +70,7 @@ function closePoly(): void {
   const { pts } = state;
   if (pts.length < 3) return;
   if (polyArea(pts) < 0) pts.reverse();   // keep edge indices aligned with the CCW skeleton polygon
-  state.ov = []; state.sel = -1;
+  state.ov = []; state.sel = -1; state.selVertex = -1;
   state.closed = true; recompute(true);
 }
 
@@ -65,12 +82,13 @@ function updateCursor(): void {
 
 export function initEditor(): void {
   c2.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
     const { pts } = state;
     const [x, y] = evPos(e);
     const hit = pickAt(x, y);
     if (state.closed) {
-      if (hit && hit.kind === 'vertex') { state.drag = hit.index; state.hover = hit; c2.setPointerCapture(e.pointerId); updateCursor(); return; }
-      state.sel = hit ? hit.index : -1;
+      if (hit && hit.kind === 'vertex') { state.selVertex = hit.index; state.sel = -1; syncBox(); state.drag = hit.index; state.hover = hit; c2.setPointerCapture(e.pointerId); updateCursor(); return; }
+      state.sel = hit ? hit.index : -1; state.selVertex = -1;
       if (hit && e.shiftKey) toggleGable(hit.index);
       else {
         if (hit) {
@@ -105,6 +123,25 @@ export function initEditor(): void {
   c2.addEventListener('pointerup', endDrag);
   c2.addEventListener('pointercancel', endDrag);
   c2.addEventListener('pointerleave', () => { if (state.drag < 0 && !state.dragEdge) { state.hover = null; state.mouse = null; updateCursor(); draw2d(); } });
-  c2.addEventListener('dblclick', () => { if (!state.closed) { if (state.pts.length > 3) state.pts.pop(); closePoly(); } });
-  addEventListener('keydown', (e) => { if (e.key === 'Enter' && !state.closed) closePoly(); });
+  c2.addEventListener('dblclick', (e) => {
+    if (!state.closed) { if (state.pts.length > 3) state.pts.pop(); closePoly(); return; }
+    const [x, y] = evPos(e), hit = pickAt(x, y);
+    if (!hit || hit.kind !== 'edge') return;
+    const { pts } = state, i = hit.index, a = pts[i], b = pts[(i + 1) % pts.length];
+    const q = projectOnSegment(toWorld(x, y), a, b);
+    const sn = snap([q[0], q[1]]);   // keep the snap grid only when the snapped point stays on the edge
+    const on = projectOnSegment(sn, a, b);
+    addPointToEdge(i, Math.hypot(on[0] - sn[0], on[1] - sn[1]) < 1e-9 ? sn : [Math.round(q[0] * 100) / 100, Math.round(q[1] * 100) / 100]);
+  });
+  c2.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (!state.closed) return;
+    const [x, y] = evPos(e), hit = pickAt(x, y);
+    if (hit && hit.kind === 'vertex') deletePoint(hit.index);
+  });
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !state.closed) closePoly();
+    const t = e.target as HTMLElement;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && state.closed && state.selVertex >= 0 && t.tagName !== 'INPUT' && t.tagName !== 'SELECT') { e.preventDefault(); deletePoint(state.selVertex); }
+  });
 }

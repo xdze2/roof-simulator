@@ -3,7 +3,9 @@ import { $, globalAlpha } from '../dom';
 import { state } from '../state';
 
 export function syncBox(): void {
-  const { ov, sel, pts, closed } = state;
+  const { ov, sel, pts, closed, selVertex } = state;
+  const vb = $('vertBox'); vb.hidden = !(closed && selVertex >= 0 && selVertex < pts.length);
+  if (!vb.hidden) $('vN').textContent = String(selVertex);
   const box = $('edgeBox'); box.hidden = !(closed && sel >= 0 && sel < pts.length);
   if (box.hidden) return;
   const o = ov[sel], gable = !!(o && o.gable), own = !gable && !!o && o.alpha !== undefined;
@@ -18,7 +20,7 @@ export function syncBox(): void {
 }
 
 /** onChange: re-run the skeleton after an edge override changed */
-export function initEdgeBox(onChange: () => void, toggleGable: (i: number) => void): void {
+export function initEdgeBox(onChange: () => void, toggleGable: (i: number) => void, addPoint: (i: number) => void, deletePoint: (v: number) => void): void {
   document.querySelectorAll<HTMLInputElement>('input[name=em]').forEach((r) => r.addEventListener('change', () => {
     const { ov, sel } = state;
     if (sel < 0) return;
@@ -34,5 +36,7 @@ export function initEdgeBox(onChange: () => void, toggleGable: (i: number) => vo
     ov[sel] = (e.target as HTMLInputElement).checked ? undefined : { alpha: globalAlpha() };
     syncBox(); onChange();
   });
+  $('eAdd').onclick = () => { if (state.sel >= 0) addPoint(state.sel); };
+  $('vDel').onclick = () => { if (state.selVertex >= 0) deletePoint(state.selVertex); };
   addEventListener('keydown', (e) => { if ((e.key === 'g' || e.key === 'G') && state.closed && state.sel >= 0) toggleGable(state.sel); });
 }

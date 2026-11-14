@@ -10,7 +10,7 @@
   <div id="brand"><h1 data-i18n="site.title">Roof Simulator</h1>
     <p id="desc" data-i18n="site.desc"></p></div>
 <div id="right">
-  <div id="langSel" role="group" data-i18n-aria="lang.label"><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
+  <div id="langSel" role="group" data-i18n-aria="lang.label"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2.5 2.5 2.5 9.5 0 12M8 2c-2.5 2.5-2.5 9.5 0 12"/></svg><button data-lang="en">EN</button><button data-lang="fr">FR</button></div>
   <button id="about" data-i18n="btn.about">About</button>
 </div>
 </header>
@@ -43,7 +43,7 @@
   <span class="cap" id="cap2d" data-i18n="cap.2d"></span>
   <div id="box2d">
   <div id="drawBar" role="toolbar" data-i18n-aria="group.drawing">
-    <button id="clear" data-i18n="btn.clear" data-i18n-title="btn.clear.title">Clear</button>
+    <button id="clear" data-i18n-title="btn.clear.title"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.6 9h5.8l.6-9"/></svg><span data-i18n="btn.clear">Clear</span></button>
     <select id="preset" data-i18n-aria="preset.label">
       <option value="" data-i18n="preset.placeholder"></option>
       <option value="rectangle" data-i18n="preset.rectangle">Rectangle</option>
@@ -54,7 +54,6 @@
       <option value="gableHouse" data-i18n="preset.gableHouse">Gable house</option>
       <option value="lGables" data-i18n="preset.lGables">L with gables</option>
     </select>
-    <button id="resetW" data-i18n="btn.resetAll" data-i18n-title="btn.resetAll.title">Reset all</button>
   </div>
     <div id="edgeBox" hidden>
       <div class="ehead"><span data-i18n="edge.title">Edge</span> <b id="eN"></b></div>
@@ -63,9 +62,9 @@
         <input id="eSlope" type="range" min="15" max="75" value="40">
         <label class="glob" data-i18n-title="edge.global.title"><input id="eGlobal" type="checkbox"> <span data-i18n="edge.global">global</span></label></div>
       <div class="erow"><label class="rad"><input type="radio" name="em" value="gable"> <span data-i18n="edge.gable">Gable (speed=0)</span></label></div>
-      <div class="erow"><button id="eAdd" data-i18n="edge.add" data-i18n-title="edge.add.title">Add point</button></div>
+      <div class="erow"><button id="eAdd" data-i18n-title="edge.add.title"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span data-i18n="edge.add">Add point</span></button></div>
       <div class="small" data-i18n="edge.help"></div></div>
-    <div id="vertBox" hidden><span data-i18n="vert.title">Point</span> <b id="vN"></b> <button id="vDel" data-i18n="vert.delete" data-i18n-title="vert.delete.title">Delete point</button></div>
+    <div id="vertBox" hidden><span data-i18n="vert.title">Point</span> <b id="vN"></b> <button id="vDel" data-i18n-title="vert.delete.title"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10"/></svg><span data-i18n="vert.delete">Delete point</span></button></div>
   </div>
     <div id="bl"><div id="legend"></div>
     <div class="hint" data-i18n="hint"></div></div></div>
@@ -76,16 +75,6 @@
   <button class="x" id="modalX" data-i18n-aria="about.close">&times;</button>
   <h2 data-i18n="about.title">About this demo</h2>
   <div data-i18n-html="about.body"></div>
-  <h3 data-i18n="about.refs">References</h3>
-  <ul>
-    <li>O. Aichholzer, F. Aurenhammer, "Straight Skeletons for General Polygonal Figures in the Plane", COCOON 1996, LNCS 1090, pp. 117&ndash;126.</li>
-    <li>O. Aichholzer, D. Alberts, F. Aurenhammer, B. G&auml;rtner, "A Novel Type of Skeleton for Polygons", Journal of Universal Computer Science 1(12), 1995.</li>
-    <li>P. Felkel, &Scaron;. Obdr&#382;&aacute;lek, "Straight Skeleton Implementation", SCCG 1998 (the event-driven algorithm used here).</li>
-    <li>T. Kelly, P. Wonka, "Interactive Architectural Modeling with Procedural Extrusions", ACM Transactions on Graphics 30(2), 2011 (per-edge profiles, gables).</li>
-    <li>T. Biedl, M. Held, S. Huber, D. Kaaser, P. Palfrader, "Weighted Straight Skeletons in the Plane", Computational Geometry 48(2), 2015.</li>
-    <li>D. T. Lee, "Medial Axis Transformation of a Planar Shape", IEEE Transactions on PAMI 4(4), 1982 (medial axis / Voronoi diagram of segments).</li>
-    <li>CGAL 2D Straight Skeleton and Polygon Offsetting package: <a href="https://doc.cgal.org/latest/Straight_skeleton_2/index.html" target="_blank" rel="noopener">doc.cgal.org/latest/Straight_skeleton_2</a></li>
-  </ul>
 </div></div>
 <script type="module" src="/src/main.ts"></script>
 </body>

@@ -7,7 +7,7 @@ const en = {
   'site.title': 'Roof Simulator',
   'site.desc': 'Draw a floor plan, get a hipped roof: an interactive straight skeleton demo in the browser.',
   'group.drawing': 'Drawing',
-  'group.roof': 'Roof',
+  'group.roof': 'Algorithm',
   'group.view': 'View',
   'btn.clear': 'Clear',
   'btn.clear.title': 'remove the drawing',
@@ -20,8 +20,6 @@ const en = {
   'preset.irregular': 'Irregular',
   'preset.gableHouse': 'Gable house',
   'preset.lGables': 'L with gables',
-  'btn.resetAll': 'Reset all',
-  'btn.resetAll.title': 'all edges back to the global slope',
   'mode.label': 'Method',
   'mode.skel': 'Straight skeleton',
   'mode.nearest': 'Nearest segment (Voronoi / medial axis)',
@@ -68,20 +66,25 @@ const en = {
   'tour.aria': 'Guided tour',
   'tour.close': 'Close the tour (free mode)',
   'tour.hide': 'Hide',
-  'about.title': 'About this demo',
+  'about.title': 'About Roof Simulator',
   'about.close': 'Close',
   'about.aria': 'About',
-  'about.refs': 'References',
-  'about.body': `<p>The <b>straight skeleton</b> of a polygon is traced by its corners while every edge moves inward, parallel to itself, at constant speed. Corners stay sharp (a <i>mitered</i> offset), so at a reflex corner the offset keeps a pointed shape. A <i>rounded</i> offset, as in a Minkowski or buffer offset, would instead swing an arc of circle around it.</p>
-  <p>Height = arrival time of the wavefront, times tan(slope). The result is a hip roof with all planes at the same slope; each face is one roof plane, belonging to one footprint edge. Skeleton arcs are hips and ridges (convex) or valleys (reflex).</p>
-  <p>The <b>nearest-segment</b> mode shows something different: each point is coloured by its closest boundary element (an open edge, or a reflex vertex in grey), and the height is the true distance to the boundary. Its boundaries are the medial axis (Voronoi diagram of the segments): parabolic arcs next to reflex corners and circular, round cones around reflex vertices, which is the rounded counterpart of the mitered skeleton. It is sampled on a grid here, not computed exactly.</p>`,
+  'about.body': `<p><b>Roof Simulator</b> is a small interactive demo: draw a floor plan, get a hipped roof. It is free software under the <b>MIT license</b>; source code and issues: <a href="https://github.com/xdze2/roof-simulator" target="_blank" rel="noopener">github.com/xdze2/roof-simulator</a>.</p>
+  <h3>Implementation</h3>
+  <ul>
+    <li>Written in <b>TypeScript</b>, bundled with <b>Vite</b>; the only runtime dependency is <b>three.js</b>. No backend: everything runs in your browser.</li>
+    <li>The geometry (event-driven straight skeleton with vertex events, nearest-segment and nearest-point fields, isolines) is plain TypeScript, unit-tested with Vitest.</li>
+    <li>The plan is drawn on a <b>2D canvas</b>; the roof is rendered in 3D with <b>WebGL</b> through three.js (orbit controls, shadows).</li>
+    <li>The guided tour is a list of steps, each one setting the drawing, the method and the camera.</li>
+  </ul>
+  <p>Built with Claude Code.</p>`,
 };
 
 const fr: Record<keyof typeof en, string> = {
   'site.title': 'Roof Simulator',
   'site.desc': 'Dessine un plan, obtiens un toit à pans : une démo interactive du squelette droit dans le navigateur.',
   'group.drawing': 'Dessin',
-  'group.roof': 'Toit',
+  'group.roof': 'Algorithme',
   'group.view': 'Affichage',
   'btn.clear': 'Effacer',
   'btn.clear.title': 'effacer le dessin',
@@ -94,8 +97,6 @@ const fr: Record<keyof typeof en, string> = {
   'preset.irregular': 'Irrégulier',
   'preset.gableHouse': 'Maison à pignons',
   'preset.lGables': 'L avec pignons',
-  'btn.resetAll': 'Tout réinitialiser',
-  'btn.resetAll.title': 'toutes les arêtes reprennent la pente globale',
   'mode.label': 'Méthode',
   'mode.skel': 'Squelette droit',
   'mode.nearest': 'Segment le plus proche (Voronoï / axe médian)',
@@ -142,13 +143,18 @@ const fr: Record<keyof typeof en, string> = {
   'tour.aria': 'Visite guidée',
   'tour.close': 'Fermer la visite (mode libre)',
   'tour.hide': 'Masquer',
-  'about.title': 'À propos de cette démo',
+  'about.title': 'À propos de Roof Simulator',
   'about.close': 'Fermer',
   'about.aria': 'À propos',
-  'about.refs': 'Références',
-  'about.body': `<p>Le <b>squelette droit</b> d’un polygone est tracé par ses sommets lorsque chaque arête avance vers l’intérieur, parallèlement à elle-même, à vitesse constante. Les angles restent vifs (un décalage <i>en onglet</i>), si bien qu’à un sommet rentrant le décalage garde une pointe. Un décalage <i>arrondi</i>, comme celui d’une somme de Minkowski ou d’un buffer, ferait au contraire un arc de cercle autour de ce sommet.</p>
-  <p>Hauteur = temps d’arrivée du front d’onde, multiplié par tan(pente). On obtient un toit à pans dont tous les plans ont la même pente ; chaque face est un pan de toit, rattaché à une arête du plan. Les arcs du squelette sont des arêtiers et des faîtages (convexes) ou des noues (rentrants).</p>
-  <p>Le mode <b>segment le plus proche</b> montre autre chose : chaque point est coloré selon l’élément du contour le plus proche (une arête ouverte, ou un sommet rentrant en gris), et la hauteur est la vraie distance au contour. Ses frontières forment l’axe médian (diagramme de Voronoï des segments) : arcs de parabole le long des angles rentrants et cônes circulaires autour des sommets rentrants, contrepartie arrondie du squelette en onglet. Il est échantillonné sur une grille ici, pas calculé exactement.</p>`,
+  'about.body': `<p><b>Roof Simulator</b> est une petite démo interactive : dessine un plan, obtiens un toit à pans. C’est un logiciel libre sous <b>licence MIT</b> ; code source et tickets : <a href="https://github.com/xdze2/roof-simulator" target="_blank" rel="noopener">github.com/xdze2/roof-simulator</a>.</p>
+  <h3>Réalisation</h3>
+  <ul>
+    <li>Écrit en <b>TypeScript</b>, assemblé avec <b>Vite</b> ; la seule dépendance à l’exécution est <b>three.js</b>. Pas de serveur : tout tourne dans ton navigateur.</li>
+    <li>La géométrie (squelette droit par événements, avec événements de sommet, champs du segment et du point le plus proche, isolignes) est du TypeScript pur, testé avec Vitest.</li>
+    <li>Le plan est dessiné sur un <b>canvas 2D</b> ; le toit est rendu en 3D en <b>WebGL</b> via three.js (rotation à la souris, ombres).</li>
+    <li>La visite guidée est une liste d’étapes, chacune réglant le dessin, la méthode et la caméra.</li>
+  </ul>
+  <p>Réalisé avec Claude Code.</p>`,
 };
 
 export type Key = keyof typeof en;

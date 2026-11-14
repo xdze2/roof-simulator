@@ -16,6 +16,10 @@ const scene = new THREE.Scene(); scene.background = new THREE.Color(0xffffff);
 const camera = new THREE.PerspectiveCamera(40, 1, 0.5, 500);
 const controls = new OrbitControls(camera, c3);
 controls.enableDamping = true;
+c3.style.cursor = 'grab';
+c3.addEventListener('pointerdown', () => { c3.style.cursor = 'grabbing'; });
+addEventListener('pointerup', () => { c3.style.cursor = 'grab'; });
+addEventListener('pointercancel', () => { c3.style.cursor = 'grab'; });
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 0.35));
 
 // fixed sun (directional, casts shadows) aimed at the middle of the plan area, which is ~0..40 m

@@ -128,6 +128,7 @@ export function initTour(root: HTMLElement, steps: Step[] = STEPS): Tour {
 
   onLangChange(() => { applyI18n(root); render(); resize2d(); resize3d(); });   // no re-apply: the user's drawing stays
   closeBtn.onclick = close;
+  q('.tour-head').addEventListener('click', close);   // the whole title bar hides the panel (the button's click bubbles here)
   toggle.onclick = () => (root.hidden ? open() : close());
 
   // PageUp / PageDown step through the tour while it is open (arrow keys stay with sliders and selects)

@@ -1,6 +1,5 @@
-// Header toolbar: clear, presets, reset-all, slope, mode, isolines, level line.
+// Header toolbar: clear, presets, slope, mode, isolines, level line.
 import { $ } from '../dom';
-import { state } from '../state';
 import { draw2d } from '../render/view2d';
 import { build3d, updateCut } from '../render/view3d';
 import { clearAll, loadPreset, recompute } from './editor';
@@ -35,7 +34,6 @@ export function initToolbar(): void {
   $('clear').onclick = clearAll;
   const preset = $<HTMLSelectElement>('preset');
   preset.addEventListener('change', () => { if (preset.value) loadPreset(preset.value); preset.value = ''; });
-  $('resetW').onclick = () => { state.ov = []; syncBox(); recompute(false); };
   const slope = $<HTMLInputElement>('slope');
   slope.addEventListener('input', () => { $('slopeV').innerHTML = slope.value + '&deg;'; syncBox(); recompute(false); });
   $('mode').addEventListener('change', () => { updNote(); draw2d(); build3d(false); });

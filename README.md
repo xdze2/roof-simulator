@@ -7,18 +7,6 @@ Straight skeleton of a drawn polygon (2D plan + three.js roof). Vite + TypeScrip
 ![Isolines on an L-shaped roof](docs/screenshots/isolines.png)
 *Isolines every 0.25 m (thin grey, no labels) with the skeleton in red; the 3D view shows the lit roof with black plane outlines and a cast shadow.*
 
-![Gable house](docs/screenshots/gable-house.png)
-*Gable edges (per-edge profiles).*
-
-![Edge editing box](docs/screenshots/edge-box.png)
-*Selected edge: hip (slope follows the global slope or has its own) or gable.*
-
-![Nearest-segment mode](docs/screenshots/nearest-segment.png)
-*Nearest-segment (Voronoi / medial axis) mode.*
-
-![Self-intersecting polygon warning](docs/screenshots/invalid-geometry.png)
-*Invalid geometry is flagged in red and no roof is built.*
-
 ## Guided tour
 A left panel (below the views on screens < 800px; "Tour" button to hide it, PageUp / PageDown to step) walks through 11 steps in French: simple roof, level line, valley, arbitrary angles, gables, gables on an L, per-edge slopes, Voronoi of points, Voronoi of segments, straight skeleton vs medial axis, free mode.
 Steps are plain data in `src/tour/steps.ts` (footprint as a preset name or an explicit `pts` polyline, gables, per-edge slopes, mode, global slope, isolines, walls, 3D camera, level line, highlights; see the `Step` interface) and are applied by `src/ui/tour.ts`. Any view setting a step leaves out goes back to its default.

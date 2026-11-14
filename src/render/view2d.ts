@@ -123,10 +123,15 @@ function decorateEdges(): void {
     if (!gable && o && o.alpha !== g) {
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
       const nx = (b[1] - a[1]) / len, ny = -(b[0] - a[0]) / len;   // inward side on screen (CCW world, y flipped)
-      const tx = (a[0] + b[0]) / 2 + nx * 13, ty = (a[1] + b[1]) / 2 + ny * 13;
-      const txt = o!.alpha + '°';
+      // slope vector: arrow from the edge midpoint toward the inside (down the roof plane), label beside it
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, L = 26, ex = mx + nx * L, ey = my + ny * L;
+      ctx.strokeStyle = '#111'; ctx.fillStyle = '#111'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(ex, ey);
+      ctx.moveTo(ex, ey); ctx.lineTo(ex - nx * 6 + ny * 4, ey - ny * 6 - nx * 4);
+      ctx.moveTo(ex, ey); ctx.lineTo(ex - nx * 6 - ny * 4, ey - ny * 6 + nx * 4); ctx.stroke();
+      const tx = mx + nx * L * 0.5 - ny * 22, ty = my + ny * L * 0.5 + nx * 22;   // beside the shaft (along the edge)
       ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(tx - 18, ty - 8, 36, 16);
-      ctx.fillStyle = '#111'; ctx.fillText(txt, tx, ty);
+      ctx.fillStyle = '#111'; ctx.fillText(o!.alpha + '°', tx, ty);
     }
   }
   ctx.setLineDash([]);

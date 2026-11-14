@@ -27,6 +27,7 @@ export interface AppState {
   sel: number;                           // selected edge
   selVertex: number;                     // selected vertex (-1 none); exclusive with sel
   highlight: Highlight | null;           // guided-tour emphasis in the 2D plan (cleared when the polygon changes)
+  noRoof: boolean;                       // guided tour: draw walls and footprint only
 }
 
-export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1, selVertex: -1, highlight: null };
+export const state: AppState = { pts: [], closed: false, sk: null, mouse: null, drag: -1, dragEdge: null, hover: null, invalid: null, ov: [], sel: -1, selVertex: -1, highlight: null, noRoof: false };

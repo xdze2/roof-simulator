@@ -151,7 +151,8 @@ export function build3d(refit: boolean): void {
   const k = Math.tan(+$<HTMLInputElement>('slope').value * Math.PI / 180);
   const on = isoOn(); lastIso = on;
   let iso: IsoSegment[] = [];
-  if ($<HTMLSelectElement>('mode').value !== 'skel') { const r = buildField(sk, k); if (on) iso = r; }
+  if (state.noRoof) { /* walls only */ }
+  else if ($<HTMLSelectElement>('mode').value !== 'skel') { const r = buildField(sk, k); if (on) iso = r; }
   else sk.faces.forEach((f, i) => {
     if (f.length < 3) return;
     const pos: number[] = [];
@@ -174,7 +175,7 @@ export function build3d(refit: boolean): void {
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
     group.add(solid(g, new THREE.MeshLambertMaterial({ color: 0xe9e2d0, side: THREE.DoubleSide })));
   }
-  if (on) {
+  if (on && !state.noRoof) {
     if ($<HTMLSelectElement>('mode').value === 'skel') iso = isolines(sk, ISO_STEP);
     const pos: number[] = [];
     for (const sg of iso) pos.push(sg.a[0], WALL_H + sg.h + ISO_LIFT, -sg.a[1], sg.b[0], WALL_H + sg.h + ISO_LIFT, -sg.b[1]);

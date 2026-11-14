@@ -43,7 +43,7 @@ export const toWorld = (x: number, y: number): Vec2 => [(x - VIEW.ox) / VIEW.s, 
 let legendKey = '';
 onLangChange(() => { legendKey = ''; draw2d(); });
 function updateLegend(iso: boolean, mode: string): void {
-  const { sk, closed, ov } = state;
+  const { closed, ov } = state, sk = state.noRoof ? null : state.sk;
   const items: [string, number, string, string][] = [['#111', 2, 'solid', t('legend.outline')]];
   if (closed && ov.some((o) => o && o.gable)) items.push(['#000', 5, 'solid', t('legend.gable')]);
   if (sk && closed && showsArcs(mode)) {
@@ -59,7 +59,7 @@ function updateLegend(iso: boolean, mode: string): void {
 }
 
 export function draw2d(): void {
-  const { pts, closed, sk, mouse } = state;
+  const { pts, closed, mouse } = state, sk = state.noRoof ? null : state.sk;
   ctx.clearRect(0, 0, VIEW.w, VIEW.h);
   // grid
   ctx.strokeStyle = '#e6e6df'; ctx.lineWidth = 1; ctx.beginPath();

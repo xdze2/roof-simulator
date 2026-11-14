@@ -29,20 +29,30 @@ export interface Step {
   cutAnim?: boolean;                 // the level line rises from 0 to `cut`
   highlight?: Highlight;             // edges / vertices emphasised in the 2D plan
   free?: boolean;                    // keep the current drawing (free mode)
+  noRoof?: boolean;                  // walls only, the roof is not drawn yet
 }
 
 export const STEPS: Step[] = [
   {
+    id: 'question', preset: 'rectangle', noRoof: true,
+    camera: { az: 35, el: 32, dist: 81, ty: 5 },
+    title: { en: 'Where does the ridge go?', fr: 'Où passe le faîtage ?' },
+    html: {
+      en: `<p>The carpenter gets the plan of the walls and one rule of the trade: every wall has the same height, and every face of the roof has the <b>same slope</b>.</p>
+<p>From that alone, where do the ridge and the hips go? Try to picture it, then open the next step.</p>`,
+      fr: `<p>Le charpentier reçoit le plan des murs et une règle du métier : tous les murs ont la même hauteur, et tous les pans du toit ont la <b>même pente</b>.</p>
+<p>Avec ça seulement, où passent le faîtage et les arêtiers ? Essaie de l'imaginer, puis ouvre l'étape suivante.</p>`,
+    },
+  },
+  {
     id: 'simple', preset: 'rectangle',
     camera: { az: 35, el: 32, dist: 81, ty: 5 },
-    title: { en: 'A simple roof', fr: 'Un toit simple' },
+    title: { en: 'A hipped roof', fr: 'Un toit à quatre pans' },
     html: {
-      en: `<p>Here is a hipped roof on a rectangle. All four faces have the <b>same slope</b>.</p>
-<p>With the same slope everywhere, the <b>hips</b> (the edges running from the corners) are the <b>angle bisectors</b> of the outline: 45° in plan for a right-angled corner.</p>
-<p>The <b>ridge</b> joins the points where these bisectors meet. It is the polygon's "straight skeleton".</p>`,
-      fr: `<p>Voici un toit à quatre pans sur un rectangle. Les quatre pans ont la <b>même pente</b>.</p>
-<p>Avec une même pente partout, les <b>arêtiers</b> (les arêtes qui partent des coins) sont les <b>bissectrices</b> des angles du contour : à 45° en plan pour un coin droit.</p>
-<p>Le <b>faîtage</b> relie les points où ces bissectrices se rencontrent. C'est le « squelette droit » du polygone.</p>`,
+      en: `<p>On a rectangle, the answer is a hipped roof. The <b>hips</b> leave each corner at 45° in plan: they are the <b>angle bisectors</b> of the outline.</p>
+<p>The <b>ridge</b> joins the points where they meet.</p>`,
+      fr: `<p>Sur un rectangle, on obtient un toit à quatre pans. Les <b>arêtiers</b> partent de chaque coin à 45° en plan : ce sont les <b>bissectrices</b> des angles du contour.</p>
+<p>Le <b>faîtage</b> relie les points où elles se rencontrent.</p>`,
     },
   },
   {
@@ -51,12 +61,10 @@ export const STEPS: Step[] = [
     camera: { az: 30, el: 38, dist: 78, ty: 4 },
     title: { en: 'Height = distance to the wall', fr: 'Hauteur = distance au mur' },
     html: {
-      en: `<p>Same slope, same height at the same distance from the wall. The red line is the <b>contour line</b> at the cut height (translucent blue plane in 3D).</p>
-<p>In plan, it is the outline <b>offset inwards</b>: "rising water", or a front advancing at constant speed from the walls.</p>
-<p>Drag the <b>level</b> slider just below: the front advances, and when two sides meet it leaves the skeleton behind it. The <b>isolines</b> checkbox in the toolbar shows all the contour lines at once.</p>`,
-      fr: `<p>Même pente, même hauteur à même distance du mur. La ligne rouge est la <b>courbe de niveau</b> à la hauteur de coupe (plan bleu translucide en 3D).</p>
-<p>En plan, c'est le contour <b>décalé vers l'intérieur</b> : « l'eau qui monte », ou un front qui avance à vitesse constante depuis les murs.</p>
-<p>Fais glisser le curseur <b>niveau</b> juste en dessous : le front avance, et quand deux côtés se rejoignent, il laisse derrière lui le squelette. La case <b>isolignes</b> de la barre d'outils affiche toutes les courbes de niveau d'un coup.</p>`,
+      en: `<p>A <b>purlin</b> (a horizontal timber) sits at the same height all along, so it runs parallel to the walls, set back by the same distance. With one slope everywhere, height is simply proportional to the distance to the wall.</p>
+<p>The red line is such a level line: the outline <b>offset inwards</b>. Two faces meet where they have the same height, so at the same distance from two walls: on the bisector. Drag the <b>level</b> slider below to move the front.</p>`,
+      fr: `<p>Une <b>panne</b> est à la même hauteur sur toute sa longueur : elle court parallèle aux murs, en retrait d'une même distance. Avec une seule pente, la hauteur est simplement proportionnelle à la distance au mur.</p>
+<p>La ligne rouge est une telle ligne de niveau : le contour <b>décalé vers l'intérieur</b>. Deux pans se rejoignent là où ils ont la même hauteur, donc à même distance de deux murs : sur la bissectrice. Fais glisser le curseur <b>niveau</b> ci-dessous pour faire avancer le front.</p>`,
     },
   },
   {
@@ -65,51 +73,53 @@ export const STEPS: Step[] = [
     camera: { az: 40, el: 40, dist: 96, ty: 4 },
     title: { en: 'L-shaped house: the valley', fr: 'Maison en L : la noue' },
     html: {
-      en: `<p>Let us add a <b>reflex</b> corner (circled in red in the plan): we get an L-shaped house.</p>
-<p>The <span style="color:#c4501b"><b>orange</b></span> arcs are the hips and the ridge (convex corners, the roof slopes down on both sides). The <span style="color:#1b6fc4"><b>blue</b></span> arcs are the <b>valleys</b>, where two faces meet in a trough and the water runs off.</p>
-<p>The valley starts at the reflex corner, always along the bisector, and runs to the ridge.</p>`,
-      fr: `<p>Ajoutons un coin <b>rentrant</b> (cerclé en rouge en plan) : on obtient une maison en L.</p>
-<p>Les arcs <span style="color:#c4501b"><b>orange</b></span> sont les arêtiers et le faîtage (coins saillants, le toit « descend » de chaque côté). Les arcs <span style="color:#1b6fc4"><b>bleus</b></span> sont les <b>noues</b>, là où deux pans se rejoignent en creux et où l'eau s'écoule.</p>
-<p>La noue part du coin rentrant, toujours sur la bissectrice, et va rejoindre le faîtage.</p>`,
+      en: `<p>An L-shaped house has an inward corner (circled in red). There the two faces meet in a trough, the <b>valley</b>, where the rain collects.</p>
+<p>It is still a bisector, but of a <b>reflex</b> corner, so it points into the house. <span style="color:#c4501b"><b>Orange</b></span>: hips and ridge. <span style="color:#1b6fc4"><b>Blue</b></span>: valleys.</p>`,
+      fr: `<p>Une maison en L a un coin rentrant (cerclé en rouge). Là, les deux pans se rejoignent en creux : c'est la <b>noue</b>, où l'eau de pluie se rassemble.</p>
+<p>C'est encore une bissectrice, mais d'un coin <b>rentrant</b> : elle part vers l'intérieur de la maison. En <span style="color:#c4501b"><b>orange</b></span> : arêtiers et faîtage. En <span style="color:#1b6fc4"><b>bleu</b></span> : les noues.</p>`,
     },
   },
   {
-    id: 'angles',
-    pts: [[6, 8], [34, 8], [34, 20], [22, 31], [6, 24]],
-    highlight: { vertices: [2, 3] },
-    camera: { az: 25, el: 36, dist: 90, ty: 5 },
-    title: { en: 'Arbitrary angles', fr: 'Angles quelconques' },
+    id: 'segments', preset: 'U', mode: 'nearest',
+    camera: { az: 30, el: 42, dist: 102, ty: 3 },
+    title: { en: 'A false trail: distance to the wall', fr: 'Fausse piste : la distance au mur' },
     html: {
-      en: `<p>Walls need not meet at right angles. The hips are still the <b>bisectors</b> of the corners, but they are no longer at 45° in plan.</p>
-<p>The offset front loses its short sides first: each time a side vanishes, two hips meet and a new one starts. The ridge breaks, and some faces become <b>triangles</b>.</p>
-<p>Drag a vertex or an edge to watch the skeleton reorganise.</p>`,
-      fr: `<p>Les murs ne sont pas forcément à angle droit. Les arêtiers restent les <b>bissectrices</b> des coins, mais ne sont plus à 45° en plan.</p>
-<p>Le front décalé perd ses côtés courts en premier : chaque fois qu'un côté disparaît, deux arêtiers se rejoignent et un nouveau part. Le faîtage se brise, et certains pans deviennent des <b>triangles</b>.</p>
-<p>Fais glisser un sommet ou un côté pour voir le squelette se réorganiser.</p>`,
+      en: `<p>Let us take "height = distance to the wall" literally, with the true distance to each wall segment. Near an inward corner, the nearest point of the wall is the <b>corner post itself</b>: the roof bulges into a cone (hatched grey). You cannot build that with straight timbers.</p>
+<p>The coloured zones are the <b>Voronoi diagram of the segments</b> (the medial axis). Around reflex corners its boundaries become <b>parabolas</b>.</p>`,
+      fr: `<p>Prenons « hauteur = distance au mur » au pied de la lettre, avec la vraie distance à chaque segment de mur. Près d'un coin rentrant, le point du mur le plus proche, c'est le <b>poteau d'angle lui-même</b> : le toit se bombe en cône (gris hachuré). Impossible à construire avec des bois droits.</p>
+<p>Les zones colorées forment le <b>diagramme de Voronoï des segments</b> (l'axe médian). Autour des coins rentrants, ses frontières deviennent des <b>paraboles</b>.</p>`,
     },
   },
   {
-    id: 'pignons', preset: 'gableHouse',
-    camera: { az: 60, el: 22, dist: 78, ty: 6 },
-    title: { en: 'Gables', fr: 'Pignons' },
+    id: 'points', preset: 'L', mode: 'points',
+    camera: { az: 35, el: 42, dist: 102, ty: 3 },
+    title: { en: 'Aside: only the corners', fr: 'Parenthèse : les coins seulement' },
     html: {
-      en: `<p>An edge can be declared a <b>gable</b>: its face is vertical (90° slope) and the wall rises up to the ridge.</p>
-<p>Here the two short sides are gables (thick black lines). The roof has only two faces, a gable roof, with a ridge parallel to the long sides.</p>
-<p>Click an edge, then choose <b>Gable</b> in the box that opens (or shift-click, or press G) to switch it between gable and sloped face.</p>`,
-      fr: `<p>Un côté peut être déclaré <b>pignon</b> : son pan est vertical (pente de 90°), le mur monte jusqu'au faîtage.</p>
-<p>Ici les deux petits côtés sont des pignons (traits noirs épais). Le toit n'a plus que deux pans, à deux versants, avec un faîtage parallèle aux longs côtés.</p>
-<p>Clique un côté puis choisis <b>Pignon</b> dans la boîte qui s'ouvre (ou maj-clic, ou touche G) pour le basculer en pignon ou en pan.</p>`,
+      en: `<p>A thought experiment: what if only the corners counted? Each point takes the colour of its nearest corner, the classic <b>Voronoi diagram</b> of points. The height gives upside-down cones, and the walls have vanished from the computation. Not a roof, but the simplest case of "nearest site".</p>`,
+      fr: `<p>Une expérience de pensée : et si seuls les coins comptaient ? Chaque point prend la couleur du coin le plus proche, c'est le <b>diagramme de Voronoï</b> classique des points. La hauteur donne des cônes renversés, et les murs ont disparu du calcul. Pas un toit, mais le cas le plus simple de « site le plus proche ».</p>`,
     },
   },
   {
-    id: 'pignons-l', preset: 'lGables',
-    camera: { az: 35, el: 35, dist: 96, ty: 5 },
-    title: { en: 'Gables on an L-shaped house', fr: 'Pignons sur une maison en L' },
+    id: 'onglet', preset: 'U', mode: 'overlay',
+    camera: { az: 30, el: 42, dist: 102, ty: 3 },
+    title: { en: 'Flat faces: the straight skeleton', fr: 'Pans plans : le squelette droit' },
     html: {
-      en: `<p>Same idea on the L-shaped house: two edges are gables, and the rest of the outline keeps its slope.</p>
-<p>The ridge lines up with the gables, and the valley from the reflex corner joins the neighbouring faces. Notice how the skeleton reorganises compared with the "valley" step.</p>`,
-      fr: `<p>Même idée sur la maison en L : deux côtés sont des pignons, et le reste du contour garde sa pente.</p>
-<p>Le faîtage s'aligne sur les pignons, et la noue du coin rentrant se raccorde aux pans voisins. Observe comment le squelette se réorganise par rapport à l'étape « la noue ».</p>`,
+      en: `<p>The carpenter's way: each face belongs to <b>its</b> wall and keeps its slope all the way up. At the inward corner, two faces meet in a straight cut, like a <b>mitre joint</b>.</p>
+<p>In other words, measure the distance to the <b>line carrying the wall</b>, restricted to its face: every face is a plane. This is the <b>straight skeleton</b> (black lines), drawn over the medial axis (colours). They agree away from reflex corners and part ways near them.</p>`,
+      fr: `<p>La façon du charpentier : chaque pan appartient à <b>son</b> mur et garde sa pente jusqu'en haut. Au coin rentrant, deux pans se rejoignent en ligne droite, <b>en onglet</b>.</p>
+<p>Autrement dit, on mesure la distance à la <b>droite qui porte le mur</b>, restreinte à son pan : chaque pan est un plan. C'est le <b>squelette droit</b> (traits noirs), superposé à l'axe médian (couleurs). Ils coïncident loin des coins rentrants et divergent à leur voisinage.</p>`,
+    },
+  },
+  {
+    id: 'complexe', preset: 'irregular',
+    iso: true, cut: 0.5, cutAnim: true, controls: ['cut'],
+    camera: { az: 35, el: 40, dist: 100, ty: 4 },
+    title: { en: 'A complex case', fr: 'Un cas complexe' },
+    html: {
+      en: `<p>On a real house, tracing this by hand takes hours. The computer does what the level line showed: push every wall inwards at the same speed and watch the front.</p>
+<p>Only two things can happen. A short side <b>shrinks to nothing</b>: two hips merge and a new one starts. Or a reflex corner <b>hits the opposite side</b>: the front splits in two. Drag the <b>level</b> slider to see both, or drag a vertex to reshape the house.</p>`,
+      fr: `<p>Sur une vraie maison, tracer l'épure à la main prend des heures. L'ordinateur fait ce que montrait la ligne de niveau : pousser tous les murs vers l'intérieur à la même vitesse et regarder le front.</p>
+<p>Il ne peut se passer que deux choses. Un côté court <b>se réduit à rien</b> : deux arêtiers se rejoignent et un nouveau part. Ou un coin rentrant <b>touche le côté d'en face</b> : le front se coupe en deux. Fais glisser le curseur <b>niveau</b> pour voir les deux, ou déplace un sommet pour changer la maison.</p>`,
     },
   },
   {
@@ -118,63 +128,33 @@ export const STEPS: Step[] = [
     camera: { az: 20, el: 25, dist: 81, ty: 5 },
     title: { en: 'Different slopes', fr: 'Pentes différentes' },
     html: {
-      en: `<p>Let us give the long bottom edge a low slope (22°) and the top one a steep slope (58°). The short sides stay at 40°.</p>
-<p>The steep face climbs faster: the ridge moves towards the steepest wall, and the hips are <b>no longer bisectors</b>.</p>
-<p>The principle is the same (each face is a plane, the height is a weighted distance); only the weight of each edge changes. Click an edge, untick <b>global</b> and set its slope.</p>`,
-      fr: `<p>Donnons au long côté du bas une pente faible (22°) et à celui du haut une pente forte (58°). Les petits côtés restent à 40°.</p>
-<p>Le pan raide monte plus vite : le faîtage se décale vers le mur le plus raide, et les arêtiers <b>ne sont plus des bissectrices</b>.</p>
-<p>Le principe reste le même (chaque pan est un plan, la hauteur est une distance pondérée), seul le poids de chaque côté change. Clique un côté, décoche <b>globale</b> et règle sa pente.</p>`,
+      en: `<p>A steeper face on the weather side, a gentler one over a porch: here the bottom face is at 22°, the top one at 58°. The steep face climbs faster, so the ridge moves towards it and the hips are <b>no longer bisectors</b>.</p>
+<p>Each wall's front now moves at its own speed: a <b>weighted</b> straight skeleton. Click an edge, untick <b>global</b> and set its slope.</p>`,
+      fr: `<p>Un pan plus raide côté intempéries, un plus doux au-dessus d'un auvent : ici le pan du bas est à 22°, celui du haut à 58°. Le pan raide monte plus vite, le faîtage se décale vers lui et les arêtiers <b>ne sont plus des bissectrices</b>.</p>
+<p>Chaque mur fait avancer son front à sa propre vitesse : c'est un squelette droit <b>pondéré</b>. Clique un côté, décoche <b>globale</b> et règle sa pente.</p>`,
     },
   },
   {
-    id: 'points', preset: 'L', mode: 'points',
-    camera: { az: 35, el: 42, dist: 102, ty: 3 },
-    title: { en: 'Voronoi diagram of points', fr: 'Voronoï de points' },
+    id: 'pignons', preset: 'lGables',
+    camera: { az: 35, el: 35, dist: 96, ty: 5 },
+    title: { en: 'Gables', fr: 'Pignons' },
     html: {
-      en: `<p>Let us change viewpoint: instead of the walls, we only look at the polygon's <b>vertices</b>.</p>
-<p>Each point of the plane takes the colour of its nearest vertex: every vertex owns a zone, the <b>Voronoi diagram</b> of the points, clipped to the outline.</p>
-<p>If the height is the distance to the nearest vertex, we get <b>inverted cones</b>, tip down on each vertex, intersecting above the boundaries. This is not a roof: the walls have vanished from the computation.</p>`,
-      fr: `<p>Changeons de point de vue : au lieu des murs, on ne regarde que les <b>sommets</b> du polygone.</p>
-<p>Chaque point du plan prend la couleur de son sommet le plus proche : chaque sommet possède sa zone, c'est le <b>diagramme de Voronoï</b> des points, limité au contour.</p>
-<p>Si la hauteur est la distance au sommet le plus proche, on obtient des <b>cônes renversés</b>, pointe en bas sur chaque sommet, qui se recoupent au-dessus des frontières. Ce n'est pas un toit : les murs, eux, ont disparu du calcul.</p>`,
-    },
-  },
-  {
-    id: 'segments', preset: 'U', mode: 'nearest',
-    camera: { az: 30, el: 42, dist: 102, ty: 3 },
-    title: { en: 'Voronoi diagram of segments (medial axis)', fr: 'Voronoï de segments (axe médian)' },
-    html: {
-      en: `<p>Now the sites are the <b>walls</b> (segments). Each point takes the colour of the nearest wall, and the height is the true distance to the wall.</p>
-<p>The boundaries between zones form the <b>medial axis</b>. Near a reflex corner the distance is measured to the vertex: we get rounded cones (hatched grey), and the boundaries become <b>parabolas</b>.</p>
-<p>The resulting surface is smooth and rounded, not a roof with flat faces.</p>`,
-      fr: `<p>Maintenant les sites sont les <b>murs</b> (des segments). Chaque point prend la couleur du mur le plus proche, et la hauteur est la vraie distance au mur.</p>
-<p>Les frontières entre zones forment l'<b>axe médian</b>. Près d'un coin rentrant, la distance se mesure au sommet : on obtient des cônes arrondis (en gris hachuré), et les frontières deviennent des <b>paraboles</b>.</p>
-<p>La surface obtenue est lisse et arrondie, ce n'est pas un toit à pans plans.</p>`,
-    },
-  },
-  {
-    id: 'onglet', preset: 'U', mode: 'overlay',
-    camera: { az: 30, el: 42, dist: 102, ty: 3 },
-    title: { en: 'Flat faces: the straight skeleton', fr: 'Pans plans : le squelette droit' },
-    html: {
-      en: `<p>To get <b>flat faces</b>, we measure the distance not to the segment but to the <b>line carrying the wall</b>, restricted to its face. Each face is then a plane.</p>
-<p>At the reflex corner there is no more cone or parabola: the faces meet along a straight line, a mitre. This is the <b>straight skeleton</b>, the sharp-cornered version of the medial axis.</p>
-<p>The view overlays both: the colours are the medial axis, the black lines the straight skeleton. They coincide away from reflex corners and diverge near them.</p>`,
-      fr: `<p>Pour avoir des <b>pans plans</b>, on mesure la distance non pas au segment mais à la <b>droite qui porte le mur</b>, restreinte à son pan. Chaque pan est alors un plan.</p>
-<p>Au coin rentrant, il n'y a plus de cône ni de parabole : les pans se rejoignent en ligne droite, « en onglet ». C'est le <b>squelette droit</b>, la version à angles vifs de l'axe médian.</p>
-<p>La vue superpose les deux : les couleurs sont l'axe médian, les traits noirs le squelette droit. Ils coïncident loin des coins rentrants et divergent à leur voisinage.</p>`,
+      en: `<p>A <b>gable</b> wall rises vertically up to the ridge (thick black lines). It is the limit case of the previous step: a 90° slope, so that wall's front does not move at all, and the ridge runs straight to it.</p>
+<p>Click an edge, then choose <b>Gable</b> (or shift-click, or press G) to switch it.</p>`,
+      fr: `<p>Un mur <b>pignon</b> monte à la verticale jusqu'au faîtage (traits noirs épais). C'est le cas limite de l'étape précédente : une pente de 90°, donc le front de ce mur n'avance pas du tout, et le faîtage vient droit sur lui.</p>
+<p>Clique un côté puis choisis <b>Pignon</b> (ou maj-clic, ou touche G) pour le basculer.</p>`,
     },
   },
   {
     id: 'libre', free: true,
     title: { en: 'Free mode: draw your own roof', fr: 'Mode libre : dessine ton toit' },
     html: {
-      en: `<p>Over to you. The toolbar controls stay active: presets, slope, method, isolines, level.</p>
-<p>Click <b>Clear</b>, then click in the plan to place points; click the first point (or press Enter) to close. Drag vertices or edges to reshape; double-click an edge to add a point, right-click a point to delete it.</p>
-<p>Click an edge to change its slope or make it a gable.</p>`,
-      fr: `<p>À toi de jouer. Les commandes du bandeau restent actives : modèles, pente, méthode, isolignes, niveau.</p>
-<p>Clique <b>Effacer</b>, puis clique dans le plan pour poser des points ; clique le premier point (ou Entrée) pour fermer. Fais glisser les sommets ou les côtés pour modifier la forme ; double-clique un côté pour ajouter un point, clic droit sur un point pour le supprimer.</p>
-<p>Clique un côté pour changer sa pente ou en faire un pignon.</p>`,
+      en: `<p>Over to you. Click <b>Clear</b>, then click in the plan to place points; click the first point (or press Enter) to close. Drag vertices or edges to reshape; double-click an edge to add a point, right-click a point to delete it. Click an edge to change its slope or make it a gable.</p>
+<p>Not handled yet: walls of different heights, flat-topped roofs, inner courtyards.</p>
+<p>Further reading: Aichholzer et al. (1995), <i>A novel type of skeleton for polygons</i>; Eppstein &amp; Erickson (1999), <i>Raising roofs, crashing cycles, and playing pool</i>; Felkel &amp; Obdržálek (1998), <i>Straight skeleton implementation</i>; Biedl et al. (2015), <i>Weighted straight skeletons in the plane</i>; CGAL, <i>2D Straight Skeleton and Polygon Offsetting</i>.</p>`,
+      fr: `<p>À toi de jouer. Clique <b>Effacer</b>, puis clique dans le plan pour poser des points ; clique le premier point (ou Entrée) pour fermer. Fais glisser les sommets ou les côtés ; double-clique un côté pour ajouter un point, clic droit sur un point pour le supprimer. Clique un côté pour changer sa pente ou en faire un pignon.</p>
+<p>Pas encore géré : murs de hauteurs différentes, toits terrasses, cours intérieures.</p>
+<p>Pour aller plus loin : Aichholzer et al. (1995), <i>A novel type of skeleton for polygons</i> ; Eppstein &amp; Erickson (1999), <i>Raising roofs, crashing cycles, and playing pool</i> ; Felkel &amp; Obdržálek (1998), <i>Straight skeleton implementation</i> ; Biedl et al. (2015), <i>Weighted straight skeletons in the plane</i> ; CGAL, <i>2D Straight Skeleton and Polygon Offsetting</i>.</p>`,
     },
   },
 ];

@@ -15,6 +15,7 @@ export function applyStep(s: Step): void {
   setMode(s.mode ?? 'skel');
   setSlope(s.slope ?? 40);
   $<HTMLInputElement>('iso').checked = !!s.iso;
+  state.noRoof = !!s.noRoof;
   const shape = stepShape(s);
   if (shape) loadShape(shape.pts, shape.ov);
   else { state.highlight = null; state.sel = -1; state.selVertex = -1; syncBox(); recompute(false); }
